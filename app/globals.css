@@ -265,7 +265,8 @@ h2 { font-size: clamp(47px, 6vw, 94px); font-weight: 800; letter-spacing: -.075e
 .careers-copy .section-kicker { color: #77736d; }
 .careers-copy h2 { max-width: 570px; }
 .careers-copy > p { max-width: 410px; margin-top: 34px; color: #77736d; font-size: 18px; line-height: 1.5; }
-.career-meta { display: flex; justify-content: space-between; max-width: 410px; margin-top: 105px; padding-top: 15px; border-top: 1px solid rgba(19,19,19,.22); color: #77736d; font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.career-cta { margin-top: 29px; }
+.career-meta { display: flex; justify-content: space-between; max-width: 410px; margin-top: 58px; padding-top: 15px; border-top: 1px solid rgba(19,19,19,.22); color: #77736d; font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .career-meta span:last-child { color: var(--red); }
 .career-form-wrap { min-height: 560px; background: var(--black); }
 .career-form { height: 100%; padding: 35px; }

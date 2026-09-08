@@ -553,6 +553,7 @@ export default function Home() {
             <div className="section-kicker"><span>07</span> Join the team</div>
             <h2>Bring your <em>point of view.</em></h2>
             <p>We are always looking for thoughtful strategists, creative minds, makers, and people who care about getting the details right.</p>
+            <a className="button button-primary career-cta" href="#career-form">Join the team <span>↗</span></a>
             <div className="career-meta"><span>UFirst / People</span><span>Designed to perform.</span></div>
           </div>
           <div className="career-form-wrap" id="career-form">
