@@ -45,32 +45,45 @@ const services = [
     number: '01',
     title: 'Brand & strategy',
     text: 'Positioning, identity, and campaign thinking that give your brand a clear lane to own.',
-    tags: ['Brand positioning', 'Visual identity', 'Campaign platforms'],
+    tags: ['Marketing strategy', 'Brand positioning', 'Launch strategy'],
   },
   {
     number: '02',
     title: 'Creative & content',
     text: 'Big ideas translated into social, film, photography, and design that people remember.',
-    tags: ['Creative direction', 'Social content', 'Art direction'],
+    tags: ['Creative direction', 'Copywriting', 'Content planning'],
   },
   {
     number: '03',
     title: 'Media production',
     text: 'Film, photography, editing, motion, and post-production that make the idea feel real.',
-    tags: ['Branded films', 'Photography', 'Post-production'],
+    tags: ['Commercial video', 'Product photography', 'Podcast production'],
   },
   {
     number: '04',
     title: 'Social & digital',
     text: 'Platform-native content and digital launches that keep your brand in the conversation.',
-    tags: ['Social systems', 'Digital launches', 'Community'],
+    tags: ['Social management', 'Community', 'Performance marketing'],
   },
   {
     number: '05',
     title: 'Growth & performance',
     text: 'A performance mindset across paid, organic, and digital so attention turns into momentum.',
-    tags: ['Media planning', 'Performance creative', 'Growth loops'],
+    tags: ['Market research', 'Campaign management', 'Growth planning'],
   },
+];
+
+const profilePrinciples = [
+  ['Results-driven approach', 'Clear objectives and measurable outcomes in every strategy, campaign, and creative solution.'],
+  ['Creative & strategic thinking', 'Creative ideas grounded in planning, business goals, and meaningful audience connections.'],
+  ['In-house production', 'Integrated production capabilities that keep quality, consistency, and execution moving together.'],
+  ['Dedicated partnership', 'Clear communication, tailored solutions, and long-term thinking from the first brief onward.'],
+];
+
+const industries = [
+  'Real estate', 'Interior design', 'Healthcare', 'Fashion & retail', 'Restaurants & cafés',
+  'Automotive', 'Events & entertainment', 'Technology & software', 'Beauty & cosmetics',
+  'Fitness & wellness', 'Startups', 'Education',
 ];
 
 const processSteps = [
@@ -151,6 +164,7 @@ export default function Home() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [menuOpen, setMenuOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [careerSubmitted, setCareerSubmitted] = useState(false);
   const [sceneIndex, setSceneIndex] = useState(0);
   const [pointer, setPointer] = useState({ x: 50, y: 50 });
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -238,6 +252,11 @@ export default function Home() {
     setSubmitted(true);
   }
 
+  function handleCareerSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCareerSubmitted(true);
+  }
+
   function closeMenu() {
     setMenuOpen(false);
   }
@@ -256,6 +275,7 @@ export default function Home() {
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="#work" onClick={closeMenu}>Work</a>
           <a href="#process" onClick={closeMenu}>Process</a>
+          <a href="#careers" onClick={closeMenu}>Careers</a>
         </nav>
 
         <a className="nav-cta" href="#contact">Start a project <span>↗</span></a>
@@ -378,7 +398,7 @@ export default function Home() {
           <div className="about-grid" data-reveal="left">
             <div>
               <h2>Make the work <em>matter.</em></h2>
-              <p className="lead-copy">We are a full-service marketing and media production agency based in Cairo, Egypt. We help ambitious brands find their voice, tell better stories, and create growth that can be felt.</p>
+              <p className="lead-copy">UFirst is a full-service marketing and media production agency based in Cairo, Egypt. Since 2019, we have helped brands build stronger connections through strategy, creative storytelling, and high-quality production.</p>
               <a className="arrow-link" href="#services">See what we do <span>↗</span></a>
             </div>
             <div className="about-frame">
@@ -390,6 +410,24 @@ export default function Home() {
             {stats.map((stat) => (
               <div key={stat.label}><CountUp target={stat.target} suffix={stat.suffix} /><span>{stat.label}</span></div>
             ))}
+          </div>
+          <div className="profile-grid" data-reveal="stagger">
+            <article className="profile-card profile-card-featured">
+              <span className="profile-card-label">Our mission</span>
+              <h3>Strengthen brands through strategy, story, and production.</h3>
+              <p>We empower businesses with creative work that builds trust, creates visibility, and drives sustainable growth.</p>
+            </article>
+            <article className="profile-card">
+              <span className="profile-card-label">Our vision</span>
+              <h3>Creativity with measurable impact.</h3>
+              <p>To be a leading marketing and media production partner in the Middle East, recognized for innovation and results.</p>
+            </article>
+            <article className="profile-card profile-card-wide">
+              <span className="profile-card-label">Built for different sectors</span>
+              <div className="industry-pills">
+                {industries.map((industry) => <span key={industry}>{industry}</span>)}
+              </div>
+            </article>
           </div>
         </div>
       </section>
@@ -463,6 +501,25 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="section section-dark why-section" id="why">
+        <div className="section-shell">
+          <div className="section-kicker" data-reveal="up"><span>05</span> Why UFirst</div>
+          <div className="why-heading" data-reveal="up">
+            <h2>Built to be your <em>unfair advantage.</em></h2>
+            <p>One connected team, one clear direction, and the production capability to carry the idea all the way through.</p>
+          </div>
+          <div className="why-grid" data-reveal="stagger">
+            {profilePrinciples.map(([title, text], index) => (
+              <article className="why-card" key={title}>
+                <span>0{index + 1}</span>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="statement-band">
         <div className="section-shell statement-inner" data-reveal="zoom"><span className="statement-mark">✦</span><p>Good work gets noticed.<br /><strong>Great work gets remembered.</strong></p><span className="statement-mark">✦</span></div>
       </section>
@@ -470,7 +527,7 @@ export default function Home() {
       <section className="section contact-section" id="contact">
         <div className="section-shell contact-grid" data-reveal="up">
           <div>
-            <div className="section-kicker" data-reveal="up"><span>05</span> Start a conversation</div>
+            <div className="section-kicker" data-reveal="up"><span>06</span> Start a conversation</div>
             <h2>Got a good one?<br /><em>Let&apos;s make it real.</em></h2>
             <p className="contact-copy">Tell us what you are building, where it needs to go, and what is getting in the way. We will take it from there.</p>
             <div className="contact-details"><a href="mailto:hello@ufirst.agency">hello@ufirst.agency ↗</a><span>Cairo, Egypt · Working globally</span></div>
@@ -487,6 +544,36 @@ export default function Home() {
               </>
             )}
           </form>
+        </div>
+      </section>
+
+      <section className="section careers-section" id="careers">
+        <div className="section-shell careers-grid" data-reveal="up">
+          <div className="careers-copy">
+            <div className="section-kicker"><span>07</span> Join the team</div>
+            <h2>Bring your <em>point of view.</em></h2>
+            <p>We are always looking for thoughtful strategists, creative minds, makers, and people who care about getting the details right.</p>
+            <div className="career-meta"><span>UFirst / People</span><span>Designed to perform.</span></div>
+          </div>
+          <div className="career-form-wrap" id="career-form">
+            {careerSubmitted ? (
+              <div className="form-success career-success"><span>✦</span><h3>Application captured.</h3><p>Your details are ready for the UFirst team. The company inbox and CV upload endpoint will be connected in the next step.</p><button className="button button-outline" type="button" onClick={() => setCareerSubmitted(false)}>Submit another</button></div>
+            ) : (
+              <form className="contact-form career-form" onSubmit={handleCareerSubmit}>
+                <div className="form-field-grid">
+                  <label>Full name<input name="fullName" placeholder="Your name" required /></label>
+                  <label>Age<input name="age" type="number" inputMode="numeric" placeholder="Your age" required /></label>
+                  <label>Email<input name="careerEmail" type="email" placeholder="you@email.com" required /></label>
+                  <label>Phone number<input name="phone" type="tel" placeholder="+20 ..." required /></label>
+                  <label>WhatsApp number<input name="whatsapp" type="tel" placeholder="+20 ..." required /></label>
+                  <label>Expected salary<input name="salary" placeholder="Monthly expectation" required /></label>
+                </div>
+                <label>Upload your CV<input name="cv" type="file" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required /></label>
+                <p className="form-note">Your application will be routed to the company email once the backend connection is added.</p>
+                <button className="button button-primary button-submit" type="submit">Send application <span>↗</span></button>
+              </form>
+            )}
+          </div>
         </div>
       </section>
 
