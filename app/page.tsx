@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
 
 type Project = {
   category: string;
@@ -67,15 +67,73 @@ const processSteps = [
   ['03', 'Make it move', 'We produce, launch, learn, and keep the work moving until it is doing its job in the real world.'],
 ];
 
+const directorScenes = [
+  {
+    index: '01',
+    label: 'Strategy',
+    eyebrow: 'Find the signal',
+    title: 'Before the first frame, we find the reason to care.',
+    description: 'The sharpest insight gives every decision a job to do — from the first headline to the last impression.',
+    image: '/assets/hero-camera.jpg',
+    tag: 'THE WHY',
+  },
+  {
+    index: '02',
+    label: 'Story',
+    eyebrow: 'Shape the narrative',
+    title: 'Then we turn the idea into a world people want to enter.',
+    description: 'One strong creative direction, translated into the content, identity, and experiences your audience actually remembers.',
+    image: '/assets/work-laptop.jpg',
+    tag: 'THE WHAT',
+  },
+  {
+    index: '03',
+    label: 'Scale',
+    eyebrow: 'Make it move',
+    title: 'Finally, we make the work earn its place in the real world.',
+    description: 'Production, media, and iteration working together so attention becomes momentum — and momentum becomes growth.',
+    image: '/assets/agency-page.jpg',
+    tag: 'THE IMPACT',
+  },
+];
+
 export default function Home() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [menuOpen, setMenuOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const [pointer, setPointer] = useState({ x: 50, y: 50 });
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const visibleProjects = useMemo(
     () => (activeFilter === 'All' ? projects : projects.filter((project) => project.category === activeFilter)),
     [activeFilter],
   );
+  const activeScene = directorScenes[sceneIndex];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(scrollableHeight > 0 ? (window.scrollY / scrollableHeight) * 100 : 0);
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  function handleHeroPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    if (event.pointerType === 'touch') return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    setPointer({
+      x: ((event.clientX - bounds.left) / bounds.width) * 100,
+      y: ((event.clientY - bounds.top) / bounds.height) * 100,
+    });
+  }
+
+  function handleHeroPointerLeave() {
+    setPointer({ x: 50, y: 50 });
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -94,7 +152,7 @@ export default function Home() {
           <span>FIRST</span>
         </a>
 
-        <nav className={menuOpen ? 'nav-links nav-links-open' : 'nav-links'} aria-label="Primary navigation">
+        <nav id="primary-navigation" className={menuOpen ? 'nav-links nav-links-open' : 'nav-links'} aria-label="Primary navigation">
           <a href="#about" onClick={closeMenu}>About</a>
           <a href="#services" onClick={closeMenu}>Services</a>
           <a href="#work" onClick={closeMenu}>Work</a>
@@ -108,24 +166,56 @@ export default function Home() {
         </button>
       </header>
 
-      <section className="hero" id="top">
-        <div className="hero-backdrop" aria-hidden="true" />
+      <section
+        className="hero"
+        id="top"
+        onPointerMove={handleHeroPointerMove}
+        onPointerLeave={handleHeroPointerLeave}
+        style={{ '--pointer-x': pointer.x + '%', '--pointer-y': pointer.y + '%' } as CSSProperties}
+      >
+        <div
+          className="hero-backdrop"
+          aria-hidden="true"
+          style={{
+            backgroundImage: "linear-gradient(90deg, rgba(11,11,11,.92) 0%, rgba(11,11,11,.66) 44%, rgba(11,11,11,.25) 100%), url('" + activeScene.image + "')",
+            transform: "scale(1.06) translate(" + ((pointer.x - 50) / 40) + "%, " + ((pointer.y - 50) / 40) + "%)",
+          }}
+        />
         <div className="hero-noise" aria-hidden="true" />
         <div className="section-shell hero-content">
-          <div className="eyebrow"><span className="eyebrow-dot" /> Cairo / MENA · Full-service agency</div>
+          <div className="eyebrow"><span className="eyebrow-dot" /> Cairo / MENA · Full-service agency <span className="hero-live"><span /> Live direction</span></div>
           <div className="hero-copy-wrap">
             <div>
+              <div className="hero-scene-label"><span>Scene {activeScene.index}</span><span>{activeScene.label} / {activeScene.tag}</span></div>
               <h1>Make your next <span>bold move.</span></h1>
               <p className="hero-copy">UFirst is the creative partner for brands that want more than attention. We make strategy, story, and production move as one.</p>
               <div className="hero-actions">
                 <a className="button button-primary" href="#contact">Start a project <span>↗</span></a>
-                <a className="text-link" href="#work"><span className="play-disc">▶</span> See the work</a>
+                <a className="text-link" href="#reel"><span className="play-disc">▶</span> Direct the reel</a>
               </div>
             </div>
             <div className="hero-note">
-              <span className="hero-note-index">01 / 04</span>
-              <p>Strategy first.<br />Impact always.</p>
+              <span className="hero-note-index">{activeScene.index} / 03</span>
+              <p>{activeScene.eyebrow}.<br />Impact always.</p>
             </div>
+          </div>
+          <div className="director-console" aria-label="Director's cut controls">
+            <div className="director-console-head"><span>Director&apos;s cut</span><span className="console-live"><i /> Live frame</span></div>
+            <div className="director-scene-buttons" role="tablist" aria-label="Change the UFirst scene">
+              {directorScenes.map((scene, index) => (
+                <button
+                  className={sceneIndex === index ? 'director-scene-button director-scene-active' : 'director-scene-button'}
+                  key={scene.index}
+                  type="button"
+                  role="tab"
+                  aria-selected={sceneIndex === index}
+                  onClick={() => setSceneIndex(index)}
+                >
+                  <span>{scene.index}</span>{scene.label}
+                </button>
+              ))}
+            </div>
+            <div className="director-progress"><span style={{ width: (((sceneIndex + 1) / directorScenes.length) * 100) + '%' }} /></div>
           </div>
           <div className="hero-footer">
             <span>Scroll to explore</span>
@@ -142,6 +232,46 @@ export default function Home() {
           ))}
         </div>
       </div>
+
+      <section className="reel-section section-dark" id="reel">
+        <div className="section-shell">
+          <div className="section-kicker"><span>LIVE / 06</span> The UFirst engine</div>
+          <div className="reel-heading">
+            <h2>Change the <em>frame.</em></h2>
+            <p>Use the controls to see how one sharp insight becomes a connected brand system.</p>
+          </div>
+          <div className="reel-interface">
+            <div className="reel-screen">
+              <div
+                className="reel-screen-image"
+                style={{ backgroundImage: "url('" + activeScene.image + "')" }}
+                aria-label={activeScene.label + ' scene'}
+              />
+              <div className="reel-screen-overlay" />
+              <div className="reel-scanline" />
+              <div className="reel-screen-top"><span>UF / MOTION STUDY</span><span>REC <i /></span></div>
+              <div className="reel-screen-bottom"><span>00:{String((sceneIndex + 1) * 12).padStart(2, '0')}</span><span>{activeScene.tag}</span></div>
+              <div className="reel-crosshair" aria-hidden="true"><span /><span /></div>
+            </div>
+            <div className="reel-copy">
+              <span className="reel-copy-index">Frame {activeScene.index} — {activeScene.label}</span>
+              <h3>{activeScene.title}</h3>
+              <p>{activeScene.description}</p>
+              <div className="reel-actions">
+                <button className="button button-primary" type="button" onClick={() => setSceneIndex((sceneIndex + 1) % directorScenes.length)}>Run next frame <span>↗</span></button>
+                <span className="reel-hint">Tap the frame to direct the story</span>
+              </div>
+              <div className="reel-timeline">
+                {directorScenes.map((scene, index) => (
+                  <button className={sceneIndex === index ? 'reel-timeline-step reel-timeline-active' : 'reel-timeline-step'} type="button" key={scene.index} onClick={() => setSceneIndex(index)}>
+                    <span>{scene.index}</span><b>{scene.label}</b><i />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <section className="section section-dark pattern-section" id="about">
         <div className="section-shell">
@@ -261,6 +391,8 @@ export default function Home() {
           </form>
         </div>
       </section>
+
+      <div className="scroll-progress" style={{ width: scrollProgress + '%' }} aria-hidden="true" />
 
       <footer className="site-footer">
         <div className="section-shell footer-top"><a className="brand footer-brand" href="#top"><span className="brand-glyph">U</span><span>FIRST</span></a><p>Designed to perform.</p><a className="back-top" href="#top">Back to top ↑</a></div>
