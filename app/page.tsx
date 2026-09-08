@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
 
 type Project = {
   category: string;
@@ -55,16 +55,37 @@ const services = [
   },
   {
     number: '03',
-    title: 'Media & growth',
+    title: 'Media production',
+    text: 'Film, photography, editing, motion, and post-production that make the idea feel real.',
+    tags: ['Branded films', 'Photography', 'Post-production'],
+  },
+  {
+    number: '04',
+    title: 'Social & digital',
+    text: 'Platform-native content and digital launches that keep your brand in the conversation.',
+    tags: ['Social systems', 'Digital launches', 'Community'],
+  },
+  {
+    number: '05',
+    title: 'Growth & performance',
     text: 'A performance mindset across paid, organic, and digital so attention turns into momentum.',
-    tags: ['Media planning', 'Performance creative', 'Growth systems'],
+    tags: ['Media planning', 'Performance creative', 'Growth loops'],
   },
 ];
 
 const processSteps = [
-  ['01', 'Find the signal', 'We get close to the business, the audience, and the opportunity before the first idea lands.'],
-  ['02', 'Shape the story', 'We turn the sharpest insight into a creative direction that can stretch across every touchpoint.'],
-  ['03', 'Make it move', 'We produce, launch, learn, and keep the work moving until it is doing its job in the real world.'],
+  ['01', 'Discover', 'Business, audience, opportunity.'],
+  ['02', 'Define', 'Strategy, message, creative route.'],
+  ['03', 'Create', 'Concept, design, production.'],
+  ['04', 'Launch', 'Publish, distribute, activate.'],
+  ['05', 'Optimize', 'Measure, learn, improve.'],
+];
+
+const stats = [
+  { target: 360, suffix: '°', label: 'Integrated thinking' },
+  { target: 5, suffix: '+', label: 'Core capabilities' },
+  { target: 1, suffix: '', label: 'Team from brief to launch' },
+  { target: 24, suffix: '/7', label: 'Ideas in motion' },
 ];
 
 const directorScenes = [
@@ -97,6 +118,35 @@ const directorScenes = [
   },
 ];
 
+function CountUp({ target, suffix }: { target: number; suffix: string }) {
+  const [value, setValue] = useState(0);
+  const counterRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const element = counterRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      const start = performance.now();
+      const duration = 1200;
+      const tick = (now: number) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setValue(Math.round(target * eased));
+        if (progress < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      observer.disconnect();
+    }, { threshold: 0.45 });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [target]);
+
+  return <strong ref={counterRef}>{value}{suffix}</strong>;
+}
+
 export default function Home() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -104,6 +154,7 @@ export default function Home() {
   const [sceneIndex, setSceneIndex] = useState(0);
   const [pointer, setPointer] = useState({ x: 50, y: 50 });
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [scrollY, setScrollY] = useState(0);
 
   const visibleProjects = useMemo(
     () => (activeFilter === 'All' ? projects : projects.filter((project) => project.category === activeFilter)),
@@ -114,12 +165,59 @@ export default function Home() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollY(window.scrollY);
       setScrollProgress(scrollableHeight > 0 ? (window.scrollY / scrollableHeight) * 100 : 0);
+      document.documentElement.classList.toggle('is-scrolled', window.scrollY > 24);
     };
 
+    let frame = 0;
+    const requestScrollUpdate = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        handleScroll();
+      });
+    };
+
+    const revealElements = document.querySelectorAll('[data-reveal]');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.16, rootMargin: '0px 0px -8% 0px' });
+
+    revealElements.forEach((element) => observer.observe(element));
     handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', requestScrollUpdate, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', requestScrollUpdate);
+      observer.disconnect();
+      document.documentElement.classList.remove('is-scrolled');
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const finePointer = window.matchMedia('(pointer:fine)').matches;
+    if (!finePointer) return;
+
+    const handleGlobalPointerMove = (event: PointerEvent) => {
+      root.style.setProperty('--cursor-x', event.clientX + 'px');
+      root.style.setProperty('--cursor-y', event.clientY + 'px');
+      root.classList.add('has-pointer');
+    };
+    const handlePointerLeave = () => root.classList.remove('has-pointer');
+
+    document.addEventListener('pointermove', handleGlobalPointerMove);
+    document.addEventListener('pointerleave', handlePointerLeave);
+    return () => {
+      document.removeEventListener('pointermove', handleGlobalPointerMove);
+      document.removeEventListener('pointerleave', handlePointerLeave);
+      root.classList.remove('has-pointer');
+    };
   }, []);
 
   function handleHeroPointerMove(event: ReactPointerEvent<HTMLElement>) {
@@ -146,6 +244,7 @@ export default function Home() {
 
   return (
     <main className="site-shell">
+      <div className="cursor-glow" aria-hidden="true" />
       <header className="site-nav">
         <a className="brand" href="#top" onClick={closeMenu} aria-label="UFirst home">
           <span className="brand-glyph">U</span>
@@ -178,11 +277,11 @@ export default function Home() {
           aria-hidden="true"
           style={{
             backgroundImage: "linear-gradient(90deg, rgba(11,11,11,.92) 0%, rgba(11,11,11,.66) 44%, rgba(11,11,11,.25) 100%), url('" + activeScene.image + "')",
-            transform: "scale(1.06) translate(" + ((pointer.x - 50) / 40) + "%, " + ((pointer.y - 50) / 40) + "%)",
+            transform: "scale(1.06) translate(" + ((pointer.x - 50) / 40) + "%, " + ((pointer.y - 50) / 40) + "%) translateY(" + scrollY * 0.06 + "px)",
           }}
         />
         <div className="hero-noise" aria-hidden="true" />
-        <div className="section-shell hero-content">
+        <div className="section-shell hero-content" style={{ opacity: Math.max(0.22, 1 - scrollY / 560), transform: "translateY(" + scrollY * 0.08 + "px)" }}>
           <div className="eyebrow"><span className="eyebrow-dot" /> Cairo / MENA · Full-service agency <span className="hero-live"><span /> Live direction</span></div>
           <div className="hero-copy-wrap">
             <div>
@@ -235,12 +334,12 @@ export default function Home() {
 
       <section className="reel-section section-dark" id="reel">
         <div className="section-shell">
-          <div className="section-kicker"><span>LIVE / 06</span> The UFirst engine</div>
-          <div className="reel-heading">
+          <div className="section-kicker" data-reveal="up"><span>LIVE / 06</span> The UFirst engine</div>
+          <div className="reel-heading" data-reveal="up">
             <h2>Change the <em>frame.</em></h2>
             <p>Use the controls to see how one sharp insight becomes a connected brand system.</p>
           </div>
-          <div className="reel-interface">
+          <div className="reel-interface" data-reveal="up">
             <div className="reel-screen">
               <div
                 className="reel-screen-image"
@@ -275,8 +374,8 @@ export default function Home() {
 
       <section className="section section-dark pattern-section" id="about">
         <div className="section-shell">
-          <div className="section-kicker"><span>01</span> About UFirst</div>
-          <div className="about-grid">
+          <div className="section-kicker" data-reveal="up"><span>01</span> About UFirst</div>
+          <div className="about-grid" data-reveal="left">
             <div>
               <h2>Make the work <em>matter.</em></h2>
               <p className="lead-copy">We are a full-service marketing and media production agency based in Cairo, Egypt. We help ambitious brands find their voice, tell better stories, and create growth that can be felt.</p>
@@ -287,23 +386,22 @@ export default function Home() {
               <div className="frame-caption"><span>UFirst / 2026</span><span>Built to perform</span></div>
             </div>
           </div>
-          <div className="stat-row">
-            <div><strong>01</strong><span>Strategic point of view</span></div>
-            <div><strong>02</strong><span>Creative that travels</span></div>
-            <div><strong>03</strong><span>Production without friction</span></div>
-            <div><strong>∞</strong><span>Room to grow</span></div>
+          <div className="stat-row" data-reveal="stagger">
+            {stats.map((stat) => (
+              <div key={stat.label}><CountUp target={stat.target} suffix={stat.suffix} /><span>{stat.label}</span></div>
+            ))}
           </div>
         </div>
       </section>
 
       <section className="section section-light" id="services">
         <div className="section-shell">
-          <div className="section-kicker section-kicker-light"><span>02</span> What we do</div>
-          <div className="services-heading">
+          <div className="section-kicker section-kicker-light" data-reveal="up"><span>02</span> What we do</div>
+          <div className="services-heading" data-reveal="up">
             <h2>One sharp team.<br /><em>Every angle covered.</em></h2>
             <p>When the strategy, creative, and execution live under one roof, the work moves faster — and lands harder.</p>
           </div>
-          <div className="service-grid">
+          <div className="service-grid" data-reveal="stagger">
             {services.map((service) => (
               <article className="service-card" key={service.number}>
                 <div className="service-topline"><span>{service.number}</span><span className="service-arrow">↗</span></div>
@@ -320,19 +418,19 @@ export default function Home() {
 
       <section className="section section-dark work-section" id="work">
         <div className="section-shell">
-          <div className="work-heading">
+          <div className="work-heading" data-reveal="up">
             <div>
-              <div className="section-kicker"><span>03</span> Selected work</div>
+              <div className="section-kicker" data-reveal="up"><span>03</span> Selected work</div>
               <h2>Built for the <em>real world.</em></h2>
             </div>
             <p>Not just work that looks good in a deck. Work that earns attention, changes perception, and gives people a reason to choose you.</p>
           </div>
-          <div className="filter-row" role="tablist" aria-label="Filter selected work">
+          <div className="filter-row" data-reveal="up" role="tablist" aria-label="Filter selected work">
             {filters.map((filter) => (
               <button className={activeFilter === filter ? 'filter-button filter-active' : 'filter-button'} key={filter} type="button" onClick={() => setActiveFilter(filter)} role="tab" aria-selected={activeFilter === filter}>{filter}</button>
             ))}
           </div>
-          <div className="project-grid">
+          <div className="project-grid" data-reveal="stagger">
             {visibleProjects.map((project, index) => (
               <article className={`project-card project-${index + 1}`} key={project.title}>
                 <div className={`project-image project-image-${project.accent}`}>
@@ -350,9 +448,9 @@ export default function Home() {
 
       <section className="section section-cream" id="process">
         <div className="section-shell">
-          <div className="section-kicker section-kicker-light"><span>04</span> How we move</div>
-          <div className="process-heading"><h2>Less theatre.<br /><em>More traction.</em></h2><p>Our process is simple enough to keep momentum, rigorous enough to protect the idea, and flexible enough for the real world.</p></div>
-          <div className="process-list">
+          <div className="section-kicker section-kicker-light" data-reveal="up"><span>04</span> How we move</div>
+          <div className="process-heading" data-reveal="up"><h2>Less theatre.<br /><em>More traction.</em></h2><p>Our process is simple enough to keep momentum, rigorous enough to protect the idea, and flexible enough for the real world.</p></div>
+          <div className="process-list" data-reveal="stagger">
             {processSteps.map(([number, title, text]) => (
               <div className="process-step" key={number}>
                 <span className="process-number">{number}</span>
@@ -366,13 +464,13 @@ export default function Home() {
       </section>
 
       <section className="statement-band">
-        <div className="section-shell statement-inner"><span className="statement-mark">✦</span><p>Good work gets noticed.<br /><strong>Great work gets remembered.</strong></p><span className="statement-mark">✦</span></div>
+        <div className="section-shell statement-inner" data-reveal="zoom"><span className="statement-mark">✦</span><p>Good work gets noticed.<br /><strong>Great work gets remembered.</strong></p><span className="statement-mark">✦</span></div>
       </section>
 
       <section className="section contact-section" id="contact">
-        <div className="section-shell contact-grid">
+        <div className="section-shell contact-grid" data-reveal="up">
           <div>
-            <div className="section-kicker"><span>05</span> Start a conversation</div>
+            <div className="section-kicker" data-reveal="up"><span>05</span> Start a conversation</div>
             <h2>Got a good one?<br /><em>Let&apos;s make it real.</em></h2>
             <p className="contact-copy">Tell us what you are building, where it needs to go, and what is getting in the way. We will take it from there.</p>
             <div className="contact-details"><a href="mailto:hello@ufirst.agency">hello@ufirst.agency ↗</a><span>Cairo, Egypt · Working globally</span></div>
