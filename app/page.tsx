@@ -19,7 +19,7 @@ const projects: Project[] = [
     client: 'Visual storytelling',
     title: 'Make the moment impossible to scroll past.',
     description: 'A launch system built around a clear narrative, a sharp visual world, and content that travels.',
-    image: '/assets/hero-camera.png',
+    image: '/assets/hero-camera.jpg',
     accent: 'red',
   },
   {
@@ -27,7 +27,7 @@ const projects: Project[] = [
     client: 'Digital experience',
     title: 'Turn a first impression into a lasting one.',
     description: 'A digital identity that makes the value obvious before the pitch even begins.',
-    image: '/assets/work-laptop.png',
+    image: '/assets/work-laptop.jpg',
     accent: 'cream',
   },
   {
@@ -35,7 +35,7 @@ const projects: Project[] = [
     client: 'Always-on content',
     title: 'Build a content engine with a point of view.',
     description: 'From the first frame to the final cut, we make every piece earn its place in the feed.',
-    image: '/assets/agency-page.png',
+    image: '/assets/agency-page.jpg',
     accent: 'grey',
   },
 ];
@@ -153,7 +153,7 @@ export default function Home() {
               <a className="arrow-link" href="#services">See what we do <span>↗</span></a>
             </div>
             <div className="about-frame">
-              <img src="/assets/agency-page.png" alt="UFirst agency landing page concept" />
+              <img src="/assets/agency-page.jpg" alt="UFirst agency landing page concept" />
               <div className="frame-caption"><span>UFirst / 2026</span><span>Built to perform</span></div>
             </div>
           </div>

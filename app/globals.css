@@ -35,7 +35,7 @@ img { display: block; max-width: 100%; }
 .nav-toggle { display: none; border: 0; background: none; color: white; }
 
 .hero { position: relative; display: flex; align-items: flex-end; min-height: min(900px, 100svh); padding: 150px 0 44px; isolation: isolate; }
-.hero-backdrop { position: absolute; inset: 0; z-index: -3; background: linear-gradient(90deg, rgba(11,11,11,.92) 0%, rgba(11,11,11,.66) 44%, rgba(11,11,11,.25) 100%), url('/assets/hero-camera.png') center / cover; filter: saturate(.7); }
+.hero-backdrop { position: absolute; inset: 0; z-index: -3; background: linear-gradient(90deg, rgba(11,11,11,.92) 0%, rgba(11,11,11,.66) 44%, rgba(11,11,11,.25) 100%), url('/assets/hero-camera.jpg') center / cover; filter: saturate(.7); }
 .hero-noise { position: absolute; inset: 0; z-index: -2; background-image: url('/assets/pattern.png'); background-size: 720px; opacity: .16; mix-blend-mode: screen; }
 .hero::after { position: absolute; inset: auto 0 0; z-index: -1; height: 34%; background: linear-gradient(transparent, var(--black)); content: ''; }
 .hero-content { min-height: calc(min(900px, 100svh) - 194px); display: flex; flex-direction: column; justify-content: space-between; }
