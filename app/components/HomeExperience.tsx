@@ -130,7 +130,7 @@ export default function HomeExperience({ content }: { content: SiteContent }) {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <main className="site-shell">
+    <main className="site-shell" style={{ '--pattern-image': `url('${content.backgrounds.pattern.src}')` } as CSSProperties}>
       <div className="cursor-glow" aria-hidden="true" />
       <header className="site-nav">
         <a className="brand" href="#top" onClick={closeMenu} aria-label="UFirst home"><span className="brand-glyph">U</span><span>FIRST</span></a>

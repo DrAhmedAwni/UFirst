@@ -26,6 +26,9 @@ export type SiteContent = {
     email: string;
     location: string;
   };
+  backgrounds: {
+    pattern: ManagedImage;
+  };
   hero: {
     eyebrow: string;
     headline: string;
@@ -68,6 +71,9 @@ export const defaultContent: SiteContent = {
     tagline: 'Designed to perform.',
     email: 'hello@ufirst.agency',
     location: 'Cairo, Egypt · Working globally',
+  },
+  backgrounds: {
+    pattern: image('/assets/pattern.png', 'UFirst repeating background pattern'),
   },
   hero: {
     eyebrow: 'Cairo / MENA · Full-service agency',
@@ -171,4 +177,3 @@ export const defaultContent: SiteContent = {
     body: 'Tell us what you are building, where it needs to go, and what is getting in the way. We will take it from there.',
   },
 };
-
