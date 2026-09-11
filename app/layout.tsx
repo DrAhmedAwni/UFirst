@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './components/scroll-world.css';
 
 export const metadata: Metadata = {
   title: 'UFirst Agency — Make your next bold move',

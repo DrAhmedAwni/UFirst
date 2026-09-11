@@ -2,221 +2,205 @@
 
 import { useEffect, useRef } from 'react';
 import {
-  AmbientLight,
-  BoxGeometry,
-  BufferAttribute,
-  BufferGeometry,
-  DirectionalLight,
-  EdgesGeometry,
-  Group,
-  IcosahedronGeometry,
-  Line,
-  LineBasicMaterial,
-  LineSegments,
-  Mesh,
-  MeshBasicMaterial,
-  MeshStandardMaterial,
-  PerspectiveCamera,
-  PointLight,
-  Points,
-  PointsMaterial,
-  Scene,
-  Texture,
-  TextureLoader,
-  TorusGeometry,
-  Vector3,
-  WebGLRenderer,
+  AmbientLight, BoxGeometry, BufferAttribute, BufferGeometry, CylinderGeometry,
+  DirectionalLight, ExtrudeGeometry, Group, Line, LineBasicMaterial, Mesh,
+  MeshBasicMaterial, MeshStandardMaterial, PerspectiveCamera, PlaneGeometry,
+  Scene, Shape, SRGBColorSpace, TextureLoader, TorusGeometry, WebGLRenderer,
 } from 'three';
+import { clamp, fittedCameraDistance, modulePose, smooth, type SceneChapter } from './scene-motion';
 
-type SystemSceneProps = { progress: number; assets: string[] };
-
-type ModuleDefinition = {
-  size: [number, number];
-  color: number;
-  scatter: [number, number, number];
-  connected: [number, number, number];
-  growth: [number, number, number];
-  rotation: number;
-};
-
-const modules: ModuleDefinition[] = [
-  { size: [2.7, 1.55], color: 0xf01316, scatter: [-3.6, 1.9, 0], connected: [-2.3, 1.1, 0], growth: [-2.9, 1.8, 0.5], rotation: -0.25 },
-  { size: [2.2, 1.3], color: 0xe8e1d5, scatter: [2.8, 2.2, -0.5], connected: [-0.1, 1.05, -0.3], growth: [0, 2.55, -0.4], rotation: 0.18 },
-  { size: [2.4, 1.4], color: 0x269ca9, scatter: [-3.5, -1.9, -0.8], connected: [2.1, 0.4, -0.8], growth: [2.9, 1.35, 0.3], rotation: 0.28 },
-  { size: [1.8, 2.7], color: 0xf7f6f5, scatter: [3.6, -1.3, -0.2], connected: [0.65, -1.65, -0.1], growth: [1.9, -1.1, 0.1], rotation: -0.12 },
-  { size: [2.6, 1.4], color: 0x1c5ea4, scatter: [-0.2, 3.2, -1.2], connected: [2.4, -1.2, -1.2], growth: [0.1, -2.65, -0.6], rotation: -0.2 },
-  { size: [2.15, 1.15], color: 0x9b9891, scatter: [-0.5, -3.2, -0.7], connected: [-1.35, -0.95, -0.9], growth: [-2.7, -0.7, 0.2], rotation: 0.14 },
-  { size: [1.4, 1.4], color: 0xf01316, scatter: [4.5, 0.3, -1.5], connected: [0.1, 0.05, 0.4], growth: [0, 0.2, 1.2], rotation: 0.05 },
-];
-
-function lerpPoint(a: Vector3, b: Vector3, amount: number) {
-  return a.clone().lerp(b, amount);
-}
-
-function createModule(definition: ModuleDefinition, texture?: Texture) {
-  const group = new Group();
-  const [width, height] = definition.size;
-  const material = new MeshStandardMaterial({ color: texture ? 0xffffff : definition.color, roughness: 0.6, metalness: 0.12, transparent: true, opacity: 0.92 });
-  if (texture) {
-    material.map = texture;
-    material.needsUpdate = true;
-  }
-  const panel = new Mesh(
-    new BoxGeometry(width, height, 0.16),
-    material,
-  );
-  const border = new LineSegments(
-    new EdgesGeometry(new BoxGeometry(width, height, 0.16)),
-    new LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.26 }),
-  );
-  group.add(panel, border);
-  return { group, panel, border };
-}
-
-export default function SystemScene({ progress, assets }: SystemSceneProps) {
+export default function SystemScene({ assets, paused }: { assets: string[]; paused: boolean }) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef(progress);
-
+  const pausedRef = useRef(paused);
   useEffect(() => {
-    progressRef.current = progress;
-  }, [progress]);
+    pausedRef.current = paused;
+    window.dispatchEvent(new Event('ufirst-motion'));
+  }, [paused]);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
-
+    const stages = Array.from(document.querySelectorAll<HTMLElement>('[data-3d-stage]'));
     let renderer: WebGLRenderer;
-    try {
-      renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-    } catch {
-      mount.classList.add('scene-fallback-active');
-      return;
-    }
-
+    try { renderer = new WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' }); }
+    catch { return; } // Static posters remain visible when WebGL is unavailable.
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setClearColor(0x000000, 0);
+    renderer.autoClear = false;
+    renderer.outputColorSpace = SRGBColorSpace;
     mount.appendChild(renderer.domElement);
-
     const scene = new Scene();
-    const camera = new PerspectiveCamera(34, 1, 0.1, 100);
-    camera.position.set(0, 0.1, 10);
-    scene.add(new AmbientLight(0xffffff, 2.1));
-    const keyLight = new DirectionalLight(0x8bd9e0, 2.2);
-    keyLight.position.set(-4, 5, 7);
-    scene.add(keyLight);
-    const fillLight = new PointLight(0xf01316, 9, 10);
-    fillLight.position.set(3, -2, 2);
-    scene.add(fillLight);
-
+    scene.add(new AmbientLight(0xffffff, 1.9));
+    const key = new DirectionalLight(0xffffff, 3.4);
+    key.position.set(-3, 5, 7);
+    const rim = new DirectionalLight(0x61d8e0, 3.2);
+    rim.position.set(4, 2, -2);
+    scene.add(key, rim);
     const world = new Group();
     scene.add(world);
-    const textureLoader = new TextureLoader();
-    const textures = assets.map((src) => textureLoader.load(src));
-    const builtModules = modules.map((definition, index) => createModule(definition, textures[index % textures.length]));
-    builtModules.forEach(({ group }) => world.add(group));
-
-    const core = new Mesh(
-      new IcosahedronGeometry(0.72, 2),
-      new MeshStandardMaterial({ color: 0x269ca9, emissive: 0x0b4c59, emissiveIntensity: 0.8, roughness: 0.28, metalness: 0.55 }),
-    );
+    const camera = new PerspectiveCamera(38, 1, 0.1, 150);
+    const red = new MeshStandardMaterial({ color: 0xf01316, roughness: 0.27, metalness: 0.55 });
+    const charcoal = new MeshStandardMaterial({ color: 0x172530, roughness: 0.38, metalness: 0.6 });
+    const teal = new MeshStandardMaterial({ color: 0x269ca9, roughness: 0.28, metalness: 0.4 });
+    const cream = new MeshStandardMaterial({ color: 0xe8e1d5, roughness: 0.4, metalness: 0.25 });
+    const materials = [red, charcoal, teal, cream];
+    const box = (parent: Group, w: number, h: number, d: number, material: MeshStandardMaterial, x = 0, y = 0, z = 0) => {
+      const mesh = new Mesh(new BoxGeometry(w, h, d), material);
+      mesh.position.set(x, y, z); parent.add(mesh); return mesh;
+    };
+    // Solid bevelled U: real side faces and an open centre, not a flat logo image.
+    const shape = new Shape();
+    shape.moveTo(-1.05, 1.05); shape.lineTo(-1.05, -0.2);
+    shape.bezierCurveTo(-1.05, -1.5, 1.05, -1.5, 1.05, -0.2);
+    shape.lineTo(1.05, 1.05); shape.lineTo(0.48, 1.05); shape.lineTo(0.48, -0.18);
+    shape.bezierCurveTo(0.48, -0.8, -0.48, -0.8, -0.48, -0.18);
+    shape.lineTo(-0.48, 1.05); shape.closePath();
+    const core = new Mesh(new ExtrudeGeometry(shape, { depth: 0.45, bevelEnabled: true, bevelThickness: 0.09, bevelSize: 0.08, bevelSegments: 3, steps: 1, curveSegments: 24 }), red);
     world.add(core);
-    const orbit = new Mesh(
-      new TorusGeometry(1.02, 0.012, 8, 80),
-      new MeshBasicMaterial({ color: 0xe8e1d5, transparent: true, opacity: 0.45 }),
-    );
-    orbit.rotation.x = Math.PI * 0.46;
-    world.add(orbit);
-
-    const connections = modules.map(() => new Line(new BufferGeometry(), new LineBasicMaterial({ color: 0x6bd9e0, transparent: true, opacity: 0.66 })));
-    connections.forEach((line) => world.add(line));
-
-    const particleGeometry = new BufferGeometry();
-    const particlePositions = new Float32Array(26 * 3);
-    for (let index = 0; index < 26; index += 1) {
-      particlePositions[index * 3] = (Math.random() - 0.5) * 10;
-      particlePositions[index * 3 + 1] = (Math.random() - 0.5) * 7;
-      particlePositions[index * 3 + 2] = -1.7 - Math.random() * 1.7;
-    }
-    particleGeometry.setAttribute('position', new BufferAttribute(particlePositions, 3));
-    const particles = new Points(particleGeometry, new PointsMaterial({ color: 0xe8e1d5, size: 0.035, transparent: true, opacity: 0.5 }));
-    world.add(particles);
-
-    const resize = () => {
-      const width = Math.max(mount.clientWidth, 1);
-      const height = Math.max(mount.clientHeight, 1);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height, false);
+    const rings = [1.65, 1.95].map((radius, index) => {
+      const ring = new Mesh(new TorusGeometry(radius, 0.018, 8, 96), index ? cream : teal);
+      world.add(ring); return ring;
+    });
+    let disposed = false, frame = 0, lost = false;
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const schedule = () => {
+      if (!disposed && !lost && !document.hidden && !frame) frame = requestAnimationFrame(render);
     };
-    resize();
-    const resizeObserver = new ResizeObserver(resize);
-    resizeObserver.observe(mount);
-
-    let frame = 0;
-    let last = performance.now();
-    const render = (now: number) => {
-      const delta = Math.min((now - last) / 1000, 0.05);
-      last = now;
-      const value = Math.max(0, Math.min(1, progressRef.current));
-      const firstPhase = Math.min(value / 0.58, 1);
-      const secondPhase = Math.max(0, (value - 0.58) / 0.42);
-
-      builtModules.forEach(({ group, panel, border }, index) => {
-        const definition = modules[index];
-        const scatter = new Vector3(...definition.scatter);
-        const connected = new Vector3(...definition.connected);
-        const growth = new Vector3(...definition.growth);
-        group.position.copy(lerpPoint(lerpPoint(scatter, connected, firstPhase), growth, secondPhase));
-        group.rotation.z = definition.rotation * (1 - firstPhase) + (index % 2 === 0 ? 0.08 : -0.06) * firstPhase + secondPhase * (index % 2 === 0 ? 0.16 : -0.12);
-        group.rotation.y = (1 - firstPhase) * (index % 2 === 0 ? -0.28 : 0.22) + secondPhase * 0.12;
-        group.scale.setScalar(0.92 + Math.sin((value + index * 0.08) * Math.PI) * 0.04);
-        panel.material.opacity = 0.42 + firstPhase * 0.48;
-        border.material.opacity = 0.14 + firstPhase * 0.24;
-      });
-
-      core.scale.setScalar(0.8 + firstPhase * 0.24 + secondPhase * 0.14);
-      core.rotation.x += delta * 0.22;
-      core.rotation.y += delta * 0.36;
-      orbit.rotation.z -= delta * 0.18;
-      orbit.rotation.y = value * 0.6;
-      particles.rotation.y += delta * 0.025;
-      world.rotation.y = -0.18 + value * 0.42;
-      world.rotation.x = 0.06 + Math.sin(value * Math.PI) * 0.08;
-      camera.position.x = Math.sin(value * Math.PI) * 0.72;
-      camera.position.y = 0.1 + Math.sin(value * Math.PI * 1.2) * 0.35;
-      camera.position.z = 10 - value * 1.25;
-      camera.lookAt(0, 0, 0);
-
-      connections.forEach((line, index) => {
-        const from = index === 0 ? new Vector3(0, 0, 0) : builtModules[index - 1].group.position;
-        const to = builtModules[index].group.position;
-        line.geometry.dispose();
-        line.geometry = new BufferGeometry().setFromPoints([from, to]);
-        (line.material as LineBasicMaterial).opacity = firstPhase * 0.68 + secondPhase * 0.22;
-      });
-
-      renderer.render(scene, camera);
-      frame = window.requestAnimationFrame(render);
+    const loader = new TextureLoader();
+    const textures = assets.map((src) => {
+      const texture = loader.load(src, (loaded) => { if (disposed) loaded.dispose(); else schedule(); }, undefined, schedule);
+      texture.colorSpace = SRGBColorSpace;
+      texture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+      return texture;
+    });
+    const surfaceMaterials: MeshBasicMaterial[] = [];
+    const screen = (width: number, height: number, textureIndex: number) => {
+      const group = new Group();
+      box(group, width + 0.12, height + 0.12, 0.22, charcoal);
+      const material = new MeshBasicMaterial({ map: textures[textureIndex], color: 0xffffff, toneMapped: false });
+      surfaceMaterials.push(material);
+      const face = new Mesh(new PlaneGeometry(width, height), material);
+      face.position.z = 0.12; group.add(face); return group;
     };
-    frame = window.requestAnimationFrame(render);
+    const browser = screen(2.4, 1.35, 2);
+    box(browser, 0.13, 0.45, 0.12, cream, 0, -0.85);
+    box(browser, 1, 0.09, 0.6, charcoal, 0, -1.05);
+    const board = screen(2.4, 1.35, 0);
+    const phone = screen(1, 1.5, 1);
+    const filmCamera = new Group();
+    box(filmCamera, 1.65, 1.12, 0.85, charcoal);
+    box(filmCamera, 0.72, 0.18, 0.28, red, 0, 0.67);
+    [0.48, 0.4, 0.34].forEach((radius, index) => {
+      const lens = new Mesh(new CylinderGeometry(radius, radius, 0.25, 32), index === 2 ? teal : charcoal);
+      lens.rotation.x = Math.PI / 2; lens.position.z = 0.55 + index * 0.23;
+      filmCamera.add(lens);
+    });
+    box(filmCamera, 0.14, 0.14, 0.05, red, 0.62, 0.34, 0.45);
+    const growth = new Group();
+    [0.45, 0.8, 1.2, 1.75].forEach((height, index) => box(growth, 0.32, height, 0.42, index === 3 ? red : teal, (index - 1.5) * 0.48, height / 2 - 0.8));
+    box(growth, 2.1, 0.08, 0.7, cream, 0, -0.86);
+    const modules = [browser, board, filmCamera, phone, growth];
+    modules.forEach((module) => world.add(module));
+    const connections = modules.map(() => {
+      const geometry = new BufferGeometry();
+      geometry.setAttribute('position', new BufferAttribute(new Float32Array(6), 3));
+      const line = new Line(geometry, new LineBasicMaterial({ color: 0x269ca9, transparent: true, opacity: 0.5 }));
+      line.frustumCulled = false; world.add(line); return line;
+    });
+    const progress = new Map<HTMLElement, number>();
+    let viewportWidth = 0, viewportHeight = 0, previousTime = 0;
 
-    return () => {
-      window.cancelAnimationFrame(frame);
-      resizeObserver.disconnect();
-      connections.forEach((line) => line.geometry.dispose());
-      textures.forEach((texture) => texture.dispose());
-      builtModules.forEach(({ group, panel, border }) => {
-        group.traverse((child) => {
-          if (child instanceof Mesh) child.geometry.dispose();
+    function render(now: number) {
+      frame = 0;
+      if (disposed || lost || document.hidden) return;
+      const width = window.innerWidth, height = window.innerHeight;
+      if (width !== viewportWidth || height !== viewportHeight) {
+        viewportWidth = width; viewportHeight = height; renderer.setSize(width, height, false);
+      }
+      const dt = Math.min((now - previousTime) / 1000 || 0.016, 0.1);
+      previousTime = now;
+      renderer.setScissorTest(false); renderer.clear(); renderer.setScissorTest(true);
+      let settling = false;
+      const still = pausedRef.current || motionPreference.matches;
+      for (const stage of stages) {
+        const rect = stage.getBoundingClientRect();
+        if (rect.bottom <= 0 || rect.top >= height || rect.width <= 0 || rect.height <= 0) continue;
+        const chapter = stage.dataset['3dStage'] as SceneChapter;
+        let target = clamp((height - rect.top) / (height + rect.height));
+        if (chapter === 'system') {
+          const driver = stage.closest<HTMLElement>('.system-story');
+          if (driver) target = clamp(-driver.getBoundingClientRect().top / Math.max(1, driver.offsetHeight - height));
+        } else if (chapter === 'hero') {
+          const hero = stage.closest('section');
+          if (hero) target = clamp(-hero.getBoundingClientRect().top / hero.clientHeight);
+        }
+        if (motionPreference.matches) target = 0.55;
+        else if (pausedRef.current) target = progress.get(stage) ?? target;
+        const current = progress.get(stage) ?? target;
+        const value = still ? target : current + (target - current) * (1 - Math.exp(-12 * dt));
+        progress.set(stage, value);
+        if (Math.abs(target - value) > 0.0002) settling = true;
+        const selected = Math.min(4, Math.max(0, Number(stage.dataset.selected) || 0));
+        const t = smooth(value);
+        world.rotation.set(0.07, chapter === 'process' ? 0 : -0.3 + t * 0.65, 0);
+        core.visible = chapter !== 'services' && chapter !== 'process';
+        core.rotation.set(-0.12 + t * 0.22, -0.3 + t * 1.1, -0.12 + t * 0.2);
+        core.scale.setScalar(chapter === 'hero' ? 1.15 : 0.85 + t * 0.18);
+        core.position.set(0, 0, 0.2);
+        rings.forEach((ring, index) => {
+          ring.visible = core.visible;
+          ring.rotation.set(1.05 + index * 0.5 + t * 0.5, 0.25 + t * 0.7, index + t * 1.5);
         });
-        panel.material.dispose();
-        border.geometry.dispose();
-        border.material.dispose();
-      });
-      renderer.dispose();
-      if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
+        modules.forEach((module, index) => {
+          const pose = modulePose(chapter, value, index, selected);
+          module.position.set(pose.x, pose.y, pose.z); module.scale.setScalar(pose.scale);
+          module.rotation.set((t - 0.5) * 0.15, pose.rotation * 1.6, pose.rotation);
+          const line = connections[index];
+          const points = line.geometry.getAttribute('position') as BufferAttribute;
+          const previous = chapter === 'process' && index > 0 ? modules[index - 1].position : core.position;
+          points.setXYZ(0, previous.x, previous.y, previous.z - 0.2);
+          points.setXYZ(1, pose.x, pose.y, pose.z - 0.2); points.needsUpdate = true;
+          line.visible = chapter !== 'services';
+          line.material.opacity = chapter === 'system' ? 0.12 + t * 0.5 : 0.3;
+        });
+        camera.aspect = rect.width / rect.height;
+        camera.position.set(0, 0, fittedCameraDistance(camera.aspect) - t * 0.6);
+        camera.updateProjectionMatrix();
+        renderer.setViewport(rect.left, height - rect.bottom, rect.width, rect.height);
+        renderer.setScissor(Math.max(0, rect.left), Math.max(0, height - rect.bottom), Math.min(width, rect.right) - Math.max(0, rect.left), Math.min(height, rect.bottom) - Math.max(0, rect.top));
+        renderer.render(scene, camera); stage.classList.add('three-stage-ready');
+      }
+      if (settling) schedule();
+    }
+    const resizeObserver = new ResizeObserver(schedule);
+    stages.forEach((stage) => resizeObserver.observe(stage));
+    const selectionObserver = new MutationObserver(schedule);
+    stages.forEach((stage) => selectionObserver.observe(stage, { attributes: true, attributeFilter: ['data-selected'] }));
+    const onLost = (event: Event) => { event.preventDefault(); lost = true; stages.forEach((stage) => stage.classList.remove('three-stage-ready')); };
+    const onRestored = () => { lost = false; schedule(); };
+    renderer.domElement.addEventListener('webglcontextlost', onLost);
+    renderer.domElement.addEventListener('webglcontextrestored', onRestored);
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule); window.addEventListener('ufirst-motion', schedule);
+    document.addEventListener('visibilitychange', schedule); document.addEventListener('load', schedule, true);
+    motionPreference.addEventListener('change', schedule);
+    schedule();
+    return () => {
+      disposed = true; cancelAnimationFrame(frame);
+      resizeObserver.disconnect(); selectionObserver.disconnect();
+      window.removeEventListener('scroll', schedule); window.removeEventListener('resize', schedule);
+      window.removeEventListener('ufirst-motion', schedule);
+      document.removeEventListener('visibilitychange', schedule); document.removeEventListener('load', schedule, true);
+      motionPreference.removeEventListener('change', schedule);
+      renderer.domElement.removeEventListener('webglcontextlost', onLost);
+      renderer.domElement.removeEventListener('webglcontextrestored', onRestored);
+      scene.traverse((object) => { if (object instanceof Mesh || object instanceof Line) object.geometry.dispose(); });
+      materials.forEach((material) => material.dispose()); surfaceMaterials.forEach((material) => material.dispose());
+      connections.forEach((line) => line.material.dispose()); textures.forEach((texture) => texture.dispose());
+      renderer.dispose(); renderer.domElement.remove();
+      stages.forEach((stage) => stage.classList.remove('three-stage-ready'));
     };
   }, [assets]);
 
-  return <div className="scene-mount" ref={mountRef} aria-label="Animated UFirst creative system visualization" role="img"><div className="scene-fallback" aria-hidden="true"><span className="scene-fallback-core">UF</span><span className="scene-fallback-line scene-fallback-line-one" /><span className="scene-fallback-line scene-fallback-line-two" /><span className="scene-fallback-line scene-fallback-line-three" /></div></div>;
+  return <div className="three-world" ref={mountRef} aria-hidden="true" />;
 }

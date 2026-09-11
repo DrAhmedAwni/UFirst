@@ -1,0 +1,68 @@
+/* The single fixed canvas draws only inside the visible chapter rectangles. */
+.three-world { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+.three-world canvas { display: block; width: 100%; height: 100%; }
+.three-stage { position: relative; width: 100%; height: 480px; overflow: hidden; background: radial-gradient(ellipse at center, rgba(38,156,169,.12), transparent 65%); }
+.three-stage-poster { width: 100%; height: 100%; object-fit: contain; opacity: .9; }
+.three-stage-ready .three-stage-poster { visibility: hidden; }
+.three-stage-caption { position: absolute; z-index: 4; inset: auto 20px 18px; display: flex; justify-content: space-between; gap: 12px; color: #9caeae; font-size: 9px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.hero-copy-wrap { grid-template-columns: 1.05fr 1fr; gap: 32px; align-items: center; padding-top: 40px; }
+.hero h1 { font-size: clamp(66px, 7.1vw, 112px); }
+.hero-backdrop { opacity: .4; }
+.hero .three-stage { height: clamp(340px, 36vw, 540px); }
+.motion-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: 14px 0 30px; color: #91aaaa; font-size: 9px; letter-spacing: .14em; }
+.motion-toolbar button { position: relative; z-index: 4; padding: 10px 14px; border: 1px solid #657070; background: #122023; color: #e8e1d5; font-size: 10px; letter-spacing: .06em; }
+.motion-toolbar button:focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; }
+.scene-column { min-height: 0; }
+.three-stage-system { height: min(650px, 78svh); }
+.scene-overlay-label { z-index: 4; }
+.service-3d-preview { margin-top: 45px; border: 1px solid rgba(21,21,21,.15); background: #e5e8e5; }
+.three-stage-services { height: 430px; }
+.service-3d-preview .three-stage-caption, .three-stage-process .three-stage-caption { color: #446264; }
+.stage-description { padding: 0 20px 22px; text-align: center; font-size: 13px; color: #526968; }
+.three-stage-process { height: 330px; margin-top: 38px; }
+.finale-section { border-top: 1px solid rgba(255,255,255,.12); }
+.finale-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.finale-grid .button { margin-top: 35px; }
+.finale-grid h2 { font-size: clamp(52px, 6vw, 90px); }
+@media (max-width: 1060px) {
+  .hero-copy-wrap { grid-template-columns: 1fr 1fr; gap: 20px; }
+  .hero h1 { font-size: clamp(60px, 8.5vw, 95px); }
+  .system-story-grid { gap: 16px; }
+  .system-story-copy { padding-top: 85px; }
+  .system-story-copy h2 { font-size: 52px; }
+  .system-story-copy .section-kicker { margin-bottom: 18px; }
+  .system-story-copy .lead-copy { margin-top: 18px; font-size: 16px; }
+  .system-story-legend { margin-top: 20px; }
+  .three-stage-system { height: 42svh; min-height: 220px; }
+  .scene-column { min-height: 0; margin: 0; }
+}
+@media (max-width: 720px) {
+  .hero { min-height: 100svh; padding-top: 110px; }
+  .hero-content { min-height: 0; }
+  .hero-copy-wrap { grid-template-columns: 1fr; padding: 35px 0 10px; }
+  .hero h1 { font-size: clamp(62px, 15vw, 100px); }
+  .hero .three-stage { height: 320px; }
+  .hero-actions { flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .hero-copy { font-size: 16px; }
+  .motion-toolbar { letter-spacing: .06em; padding-bottom: 24px; }
+  .system-story { padding: 0; min-height: 220svh; }
+  .system-story-copy h2 { font-size: clamp(36px, 10vw, 49px); }
+  .system-story-copy .lead-copy { font-size: 14px; }
+  .system-story-legend { gap: 12px; font-size: 8px; }
+  .three-stage-system { height: 36svh; }
+  .three-stage-services { height: 320px; }
+  .three-stage-process { height: 230px; }
+  .finale-grid { grid-template-columns: 1fr; gap: 25px; }
+  .three-stage-finale { height: 330px; }
+  .three-stage-caption { inset-inline: 8px; font-size: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .three-motion-hint { display: none; }
+  .system-story { min-height: 100svh; }
+  .system-story-sticky { position: relative; }
+}
+@media (max-height: 650px) and (min-width: 721px) {
+  .system-story-grid { grid-template-columns: 1fr 1fr; }
+  .system-story-copy { padding-top: 70px; }
+  .three-stage-system { height: 70svh; }
+}
