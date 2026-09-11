@@ -50,6 +50,9 @@ export type SiteContent = {
     headline: string;
     emphasis: string;
     body: string;
+    dashboard: ManagedImage;
+    mobile: ManagedImage;
+    browser: ManagedImage;
   };
   services: Service[];
   industries: string[];
@@ -96,6 +99,9 @@ export const defaultContent: SiteContent = {
     headline: 'One sharp idea.',
     emphasis: 'Every angle connected.',
     body: 'Scroll through the way we work: signal becomes story, story becomes output, and output keeps moving until it creates momentum.',
+    dashboard: image('/assets/ufirst-3d-dashboard.png', 'UFirst creative operations dashboard module'),
+    mobile: image('/assets/ufirst-3d-mobile.png', 'UFirst mobile workflow module'),
+    browser: image('/assets/ufirst-3d-browser.png', 'UFirst campaign workspace module'),
   },
   services: [
     {

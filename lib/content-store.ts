@@ -13,10 +13,27 @@ async function ensureStorage() {
   return DB;
 }
 
+function mergeContent(value: Partial<SiteContent>): SiteContent {
+  return {
+    ...defaultContent,
+    ...value,
+    brand: { ...defaultContent.brand, ...value.brand },
+    backgrounds: { ...defaultContent.backgrounds, ...value.backgrounds },
+    hero: { ...defaultContent.hero, ...value.hero },
+    about: { ...defaultContent.about, ...value.about },
+    system: { ...defaultContent.system, ...value.system },
+    services: value.services?.length ? value.services : defaultContent.services,
+    industries: value.industries?.length ? value.industries : defaultContent.industries,
+    process: value.process?.length ? value.process : defaultContent.process,
+    projects: value.projects?.length ? value.projects : defaultContent.projects,
+    contact: { ...defaultContent.contact, ...value.contact },
+  };
+}
+
 function parseContent(value: string | null | undefined): SiteContent {
   if (!value) return defaultContent;
   try {
-    return JSON.parse(value) as SiteContent;
+    return mergeContent(JSON.parse(value) as Partial<SiteContent>);
   } catch {
     return defaultContent;
   }
@@ -61,4 +78,3 @@ export async function listMediaRecords() {
     return [];
   }
 }
-

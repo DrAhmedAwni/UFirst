@@ -21,12 +21,14 @@ import {
   Points,
   PointsMaterial,
   Scene,
+  Texture,
+  TextureLoader,
   TorusGeometry,
   Vector3,
   WebGLRenderer,
 } from 'three';
 
-type SystemSceneProps = { progress: number };
+type SystemSceneProps = { progress: number; assets: string[] };
 
 type ModuleDefinition = {
   size: [number, number];
@@ -51,12 +53,17 @@ function lerpPoint(a: Vector3, b: Vector3, amount: number) {
   return a.clone().lerp(b, amount);
 }
 
-function createModule(definition: ModuleDefinition) {
+function createModule(definition: ModuleDefinition, texture?: Texture) {
   const group = new Group();
   const [width, height] = definition.size;
+  const material = new MeshStandardMaterial({ color: texture ? 0xffffff : definition.color, roughness: 0.6, metalness: 0.12, transparent: true, opacity: 0.92 });
+  if (texture) {
+    material.map = texture;
+    material.needsUpdate = true;
+  }
   const panel = new Mesh(
     new BoxGeometry(width, height, 0.16),
-    new MeshStandardMaterial({ color: definition.color, roughness: 0.6, metalness: 0.12, transparent: true, opacity: 0.92 }),
+    material,
   );
   const border = new LineSegments(
     new EdgesGeometry(new BoxGeometry(width, height, 0.16)),
@@ -66,7 +73,7 @@ function createModule(definition: ModuleDefinition) {
   return { group, panel, border };
 }
 
-export default function SystemScene({ progress }: SystemSceneProps) {
+export default function SystemScene({ progress, assets }: SystemSceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef(progress);
 
@@ -103,7 +110,9 @@ export default function SystemScene({ progress }: SystemSceneProps) {
 
     const world = new Group();
     scene.add(world);
-    const builtModules = modules.map(createModule);
+    const textureLoader = new TextureLoader();
+    const textures = assets.map((src) => textureLoader.load(src));
+    const builtModules = modules.map((definition, index) => createModule(definition, textures[index % textures.length]));
     builtModules.forEach(({ group }) => world.add(group));
 
     const core = new Mesh(
@@ -195,10 +204,19 @@ export default function SystemScene({ progress }: SystemSceneProps) {
       window.cancelAnimationFrame(frame);
       resizeObserver.disconnect();
       connections.forEach((line) => line.geometry.dispose());
+      textures.forEach((texture) => texture.dispose());
+      builtModules.forEach(({ group, panel, border }) => {
+        group.traverse((child) => {
+          if (child instanceof Mesh) child.geometry.dispose();
+        });
+        panel.material.dispose();
+        border.geometry.dispose();
+        border.material.dispose();
+      });
       renderer.dispose();
       if (mount.contains(renderer.domElement)) mount.removeChild(renderer.domElement);
     };
-  }, []);
+  }, [assets]);
 
   return <div className="scene-mount" ref={mountRef} aria-label="Animated UFirst creative system visualization" role="img"><div className="scene-fallback" aria-hidden="true"><span className="scene-fallback-core">UF</span><span className="scene-fallback-line scene-fallback-line-one" /><span className="scene-fallback-line scene-fallback-line-two" /><span className="scene-fallback-line scene-fallback-line-three" /></div></div>;
 }
