@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   if (!(await getAdminIdentity())) return NextResponse.json({ error: 'Admin access required.' }, { status: 403 });
-  return NextResponse.json({ assets: await listMediaRecords() });
+  return NextResponse.json({ configured: Boolean(getRuntimeEnv().MEDIA), assets: await listMediaRecords() });
 }
 
 export async function POST(request: Request) {
@@ -37,4 +37,3 @@ export async function POST(request: Request) {
     src: `/api/media/${objectKey}`,
   }, { status: 201 });
 }
-
