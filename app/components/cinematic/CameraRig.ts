@@ -80,6 +80,7 @@ export class CameraRig {
       this.currentTarget.copy(sample.target);
       camera.lookAt(this.currentTarget);
       camera.rotateZ(sample.roll);
+      camera.aspect = aspect;
       camera.fov = sample.fov;
       camera.updateProjectionMatrix();
       this.initialized = true;
@@ -89,6 +90,7 @@ export class CameraRig {
     this.currentTarget.lerp(sample.target, smoothing);
     camera.lookAt(this.currentTarget);
     camera.rotateZ(sample.roll * smoothing);
+    camera.aspect = aspect;
     camera.fov = MathUtils.lerp(camera.fov, sample.fov, smoothing);
     camera.updateProjectionMatrix();
     return sample;

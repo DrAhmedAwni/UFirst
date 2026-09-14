@@ -16,26 +16,55 @@ async function ensureStorage() {
 function mergeContent(value: Partial<SiteContent>): SiteContent {
   const system = { ...defaultContent.system, ...value.system };
   // Upgrade only the shipped placeholder artwork; retain uploaded/custom images.
+  const legacySystemSources = new Set([
+    '/assets/ufirst-3d-browser.png',
+    '/assets/ufirst-3d-dashboard.png',
+    '/assets/ufirst-3d-mobile.png',
+    '/assets/ufirst-agency-brand-v1.png',
+    '/assets/ufirst-agency-creative-v1.png',
+    '/assets/ufirst-agency-social-v1.png',
+  ]);
   for (const field of ['dashboard', 'mobile', 'browser'] as const) {
-    if (system[field].src === `/assets/ufirst-3d-${field}.png`) system[field] = defaultContent.system[field];
+    if (legacySystemSources.has(system[field].src)) system[field] = defaultContent.system[field];
   }
-  const oldServiceImages = ['/assets/hero-camera.jpg', '/assets/agency-page.jpg', '/assets/work-laptop.jpg', '/assets/agency-page.jpg', '/assets/work-laptop.jpg'];
+  const oldServiceImages = [
+    '/assets/hero-camera.jpg',
+    '/assets/agency-page.jpg',
+    '/assets/work-laptop.jpg',
+    '/assets/agency-page.jpg',
+    '/assets/work-laptop.jpg',
+    '/assets/ufirst-agency-brand-v1.png',
+    '/assets/ufirst-agency-creative-v1.png',
+    '/assets/ufirst-agency-production-v1.png',
+    '/assets/ufirst-agency-social-v1.png',
+    '/assets/ufirst-agency-growth-v1.png',
+  ];
   const services = (value.services?.length ? value.services : defaultContent.services).map((service) => {
     const index = defaultContent.services.findIndex((item) => item.number === service.number);
-    return index >= 0 && service.image.src === oldServiceImages[index] ? { ...service, image: defaultContent.services[index].image } : service;
+    return index >= 0 && oldServiceImages.includes(service.image.src) ? { ...service, image: defaultContent.services[index].image } : service;
   });
+  const oldProjectImages = new Set(['/assets/hero-camera.jpg', '/assets/work-laptop.jpg', '/assets/agency-page.jpg']);
+  const projects = (value.projects?.length ? value.projects : defaultContent.projects).map((project, index) => (
+    oldProjectImages.has(project.image.src) && defaultContent.projects[index]
+      ? { ...project, image: defaultContent.projects[index].image }
+      : project
+  ));
+  const hero = { ...defaultContent.hero, ...value.hero };
+  if (hero.background.src === '/assets/hero-camera.jpg') hero.background = defaultContent.hero.background;
+  const about = { ...defaultContent.about, ...value.about };
+  if (about.image.src === '/assets/agency-page.jpg') about.image = defaultContent.about.image;
   return {
     ...defaultContent,
     ...value,
     brand: { ...defaultContent.brand, ...value.brand },
     backgrounds: { ...defaultContent.backgrounds, ...value.backgrounds },
-    hero: { ...defaultContent.hero, ...value.hero },
-    about: { ...defaultContent.about, ...value.about },
+    hero,
+    about,
     system,
     services,
     industries: value.industries?.length ? value.industries : defaultContent.industries,
     process: value.process?.length ? value.process : defaultContent.process,
-    projects: value.projects?.length ? value.projects : defaultContent.projects,
+    projects,
     contact: { ...defaultContent.contact, ...value.contact },
   };
 }

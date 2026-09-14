@@ -4,18 +4,16 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import {
   ACESFilmicToneMapping,
   Color,
-  Fog,
   LoadingManager,
-  PCFShadowMap,
   PerspectiveCamera,
   SRGBColorSpace,
   Scene,
   WebGLRenderer,
 } from 'three';
 import type { SiteContent } from '@/app/content';
-import { addCinematicLighting, createCinematicWorld } from './CinematicWorld';
+import { createCinematicWorld } from './CinematicWorld';
 import { CameraRig } from './CameraRig';
-import { progressFromElement, sceneAt } from './ScrollDirector';
+import { progressFromDocument, sceneAt } from './ScrollDirector';
 import type { CinematicAssetUrls } from './types';
 
 export default function CinematicExperience({ content, paused, onPausedChange }: { content: SiteContent; paused: boolean; onPausedChange: (paused: boolean) => void }) {
@@ -27,13 +25,15 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
   const [webglAvailable, setWebglAvailable] = useState(true);
 
   const assets = useMemo<CinematicAssetUrls>(() => ({
-    brand: content.system.browser.src,
-    creative: content.system.dashboard.src,
-    production: content.services[2]?.image.src ?? '/assets/ufirst-agency-production-v1.png',
-    social: content.system.mobile.src,
-    growth: content.services[4]?.image.src ?? '/assets/ufirst-agency-growth-v1.png',
+    hero: content.hero.background.src,
+    cameraExterior: '/assets/camera/ufirst-camera-exterior-v2.png',
+    cameraExploded: '/assets/camera/ufirst-camera-exploded-v2.png',
+    about: content.about.image.src,
+    system: [content.system.browser.src, content.system.dashboard.src, content.system.mobile.src],
+    services: content.services.map((service) => service.image.src),
     projects: content.projects.map((project) => project.image.src),
-  }), [content.projects, content.services, content.system.browser.src, content.system.dashboard.src, content.system.mobile.src]);
+    contact: content.projects.at(-1)?.image.src ?? content.hero.background.src,
+  }), [content.about.image.src, content.hero.background.src, content.projects, content.services, content.system.browser.src, content.system.dashboard.src, content.system.mobile.src]);
 
   useEffect(() => {
     pausedRef.current = paused;
@@ -63,13 +63,9 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
     renderer.setClearColor(0x050708, 0);
-    renderer.shadowMap.enabled = !mobile;
-    renderer.shadowMap.type = PCFShadowMap;
 
     const scene = new Scene();
     scene.background = new Color(0x050708);
-    scene.fog = new Fog(0x050708, 16, 74);
-    addCinematicLighting(scene);
     const camera = new PerspectiveCamera(42, 1, 0.05, 100);
     const rig = new CameraRig();
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -84,14 +80,13 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     let lastTime = performance.now();
     let currentProgress = 0;
     let lastOverlayProgress = -1;
-    let active = false;
 
     const render = (now: number) => {
       frame = 0;
       if (disposed || document.hidden) return;
       const delta = Math.min((now - lastTime) / 1000 || 0.016, 0.1);
       lastTime = now;
-      const targetProgress = motionPreference.matches ? 0 : progressFromElement(sequence, window.innerHeight);
+      const targetProgress = motionPreference.matches ? 0 : progressFromDocument();
       if (!pausedRef.current && !motionPreference.matches) currentProgress += (targetProgress - currentProgress) * (1 - Math.exp(-10 * delta));
       const aspect = Math.max(0.25, window.innerWidth / Math.max(window.innerHeight, 1));
       world.update(currentProgress, delta);
@@ -102,7 +97,7 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
         setProgress(currentProgress);
       }
       document.documentElement.classList.toggle('cinematic-deep', currentProgress > 0.22 && currentProgress < 0.93);
-      if (active && (Math.abs(targetProgress - currentProgress) > 0.0005 || !pausedRef.current)) frame = requestAnimationFrame(render);
+      if (Math.abs(targetProgress - currentProgress) > 0.0005 || !pausedRef.current) frame = requestAnimationFrame(render);
     };
     const schedule = () => { if (!frame && !disposed) frame = requestAnimationFrame(render); };
     const resize = () => {
@@ -111,8 +106,6 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     };
     const visibility = () => { if (!document.hidden) schedule(); };
     const onScroll = () => schedule();
-    const observer = new IntersectionObserver(([entry]) => { active = entry.isIntersecting; if (active) schedule(); }, { threshold: 0.01 });
-    observer.observe(sequence);
     resize();
     window.addEventListener('resize', resize);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -123,20 +116,20 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     return () => {
       disposed = true;
       if (frame) cancelAnimationFrame(frame);
-      observer.disconnect();
       window.removeEventListener('resize', resize);
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', visibility);
       motionPreference.removeEventListener('change', schedule);
       document.documentElement.classList.remove('cinematic-deep');
       world.dispose();
+      world.textures.forEach((texture) => texture.dispose());
       renderer.dispose();
     };
   }, [assets]);
 
   const activeScene = sceneAt(progress);
-  const heroOpacity = progress < 0.2 ? 1 - Math.max(0, progress - 0.08) / 0.12 : 0;
-  const sceneOpacity = progress > 0.17 && progress < 0.96 ? 1 : 0.55;
+  const heroOpacity = progress < 0.16 ? 1 - Math.max(0, progress - 0.04) / 0.12 : 0;
+  const sceneOpacity = 0.9;
 
   function skipCinematic() {
     document.getElementById('about')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });

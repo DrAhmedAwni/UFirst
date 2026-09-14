@@ -2,14 +2,12 @@ import type { Group, Object3D, Texture, Vector3 } from 'three';
 
 export type CinematicSceneName =
   | 'reveal'
-  | 'orbit'
-  | 'lens'
-  | 'portal'
-  | 'doors'
-  | 'passage'
-  | 'world'
+  | 'system'
+  | 'about'
   | 'services'
   | 'work'
+  | 'process'
+  | 'contact'
   | 'exit';
 
 export type CinematicKeyframe = {
@@ -31,12 +29,14 @@ export type CinematicSample = {
 };
 
 export type CinematicAssetUrls = {
-  brand: string;
-  creative: string;
-  production: string;
-  social: string;
-  growth: string;
+  hero: string;
+  cameraExterior: string;
+  cameraExploded: string;
+  about: string;
+  system: string[];
+  services: string[];
   projects: string[];
+  contact: string;
 };
 
 export type CinematicWorld = {

@@ -8,13 +8,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'UFirst Agency — Make your next bold move',
     description: 'Strategy, story, and production for brands ready to move.',
-    images: ['/assets/hero-camera.jpg'],
+    images: ['/assets/hero-camera-real.png'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'UFirst Agency — Make your next bold move',
     description: 'Strategy, story, and production for brands ready to move.',
-    images: ['/assets/hero-camera.jpg'],
+    images: ['/assets/hero-camera-real.png'],
   },
 };
 

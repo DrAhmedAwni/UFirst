@@ -14,8 +14,8 @@ test('cinematic camera keyframes cover the complete journey with separate target
   assert.equal(frames[0].progress, 0);
   assert.equal(frames.at(-1).progress, 1);
   assert.ok(frames.every((frame, index) => index === 0 || frame.progress > frames[index - 1].progress));
-  assert.ok(frames.some((frame) => frame.scene === 'portal'));
-  assert.ok(frames.some((frame) => frame.scene === 'doors'));
+  assert.ok(frames.some((frame) => frame.scene === 'system'));
+  assert.ok(frames.some((frame) => frame.scene === 'about'));
   assert.ok(frames.some((frame) => frame.scene === 'services'));
   assert.ok(frames.some((frame) => frame.scene === 'work'));
   assert.notDeepEqual(frames[0].position, frames[0].target);
@@ -28,8 +28,8 @@ test('scroll director ranges are ordered and reversible', () => {
   assert.equal(ranges.at(-1).to, 1);
   assert.ok(ranges.every((range, index) => index === 0 || range.from >= ranges[index - 1].from));
   assert.equal(scroll.sceneAt(0).scene, 'reveal');
-  assert.equal(scroll.sceneAt(0.52).scene, 'passage');
-  assert.equal(scroll.sceneAt(0.88).scene, 'work');
+  assert.equal(scroll.sceneAt(0.52).scene, 'work');
+  assert.equal(scroll.sceneAt(0.88).scene, 'contact');
   assert.equal(scroll.sceneAt(1).scene, 'exit');
   assert.ok(Math.abs(scroll.localSceneProgress(0.4, 0.2, 0.6) - 0.5) < 0.000001);
   assert.equal(scroll.localSceneProgress(-1, 0.2, 0.6), 0);

@@ -2,20 +2,23 @@ import { clamp, smooth } from '../scene-motion';
 import type { CinematicSceneName } from './types';
 
 export const CINEMATIC_RANGES: Array<{ scene: CinematicSceneName; from: number; to: number; label: string }> = [
-  { scene: 'reveal', from: 0, to: 0.06, label: 'Darkness / Camera reveal' },
-  { scene: 'orbit', from: 0.06, to: 0.12, label: 'Orbit / Physical camera' },
-  { scene: 'lens', from: 0.12, to: 0.2, label: 'Lens / Approach' },
-  { scene: 'portal', from: 0.2, to: 0.3, label: 'Aperture / Portal' },
-  { scene: 'doors', from: 0.3, to: 0.49, label: 'Architecture / Monumental doors' },
-  { scene: 'passage', from: 0.49, to: 0.64, label: 'Open sesame / Passage' },
-  { scene: 'world', from: 0.64, to: 0.74, label: 'UFirst / Company world' },
-  { scene: 'services', from: 0.74, to: 0.84, label: 'Capabilities / Services' },
-  { scene: 'work', from: 0.84, to: 0.94, label: 'Selected work / Installations' },
-  { scene: 'exit', from: 0.94, to: 1, label: 'Exit / Back to the work' },
+  { scene: 'reveal', from: 0, to: 0.07, label: 'Outside / The first frame' },
+  { scene: 'system', from: 0.07, to: 0.18, label: 'Lens / Earn attention' },
+  { scene: 'about', from: 0.18, to: 0.28, label: 'Aperture / Focus the story' },
+  { scene: 'services', from: 0.28, to: 0.39, label: 'Shutter / Make the move' },
+  { scene: 'work', from: 0.39, to: 0.54, label: 'Sensor / Turn insight into work' },
+  { scene: 'process', from: 0.54, to: 0.69, label: 'Processor / Build the idea' },
+  { scene: 'contact', from: 0.69, to: 0.83, label: 'Memory / Carry it forward' },
+  { scene: 'contact', from: 0.83, to: 0.95, label: 'Viewfinder / See what is possible' },
+  { scene: 'exit', from: 0.95, to: 1, label: 'Outside / Start the conversation' },
 ];
 
 export function progressFromElement(element: HTMLElement, viewportHeight: number) {
   return clamp(-element.getBoundingClientRect().top / Math.max(1, element.offsetHeight - viewportHeight));
+}
+
+export function progressFromDocument() {
+  return clamp(window.scrollY / Math.max(1, document.documentElement.scrollHeight - window.innerHeight));
 }
 
 export function sceneAt(progress: number) {
@@ -26,4 +29,3 @@ export function sceneAt(progress: number) {
 export function localSceneProgress(progress: number, from: number, to: number) {
   return smooth(clamp((progress - from) / Math.max(to - from, 0.0001)));
 }
-
