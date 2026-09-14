@@ -2,11 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
+  ACESFilmicToneMapping,
   Color,
   Fog,
   LoadingManager,
-  PCFSoftShadowMap,
+  PCFShadowMap,
   PerspectiveCamera,
+  SRGBColorSpace,
   Scene,
   WebGLRenderer,
 } from 'three';
@@ -57,9 +59,12 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     window.setTimeout(() => setWebglAvailable(true), 0);
     const mobile = window.matchMedia('(max-width: 720px)').matches;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.1 : 1.5));
+    renderer.outputColorSpace = SRGBColorSpace;
+    renderer.toneMapping = ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.18;
     renderer.setClearColor(0x050708, 0);
     renderer.shadowMap.enabled = !mobile;
-    renderer.shadowMap.type = PCFSoftShadowMap;
+    renderer.shadowMap.type = PCFShadowMap;
 
     const scene = new Scene();
     scene.background = new Color(0x050708);

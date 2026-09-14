@@ -27,8 +27,6 @@ type Surface = Material | Material[];
 
 const RED = 0xf01316;
 const TEAL = 0x269ca9;
-const CHARCOAL = 0x11181b;
-const METAL = 0x273034;
 const CREAM = 0xe8e1d5;
 const FLOOR = 0x080b0c;
 
@@ -123,8 +121,12 @@ function createLensRing(parent: Group, radius: number, tube: number, z: number, 
 function createScreen(width: number, height: number, depth: number, texture: Texture, frameMaterial: Surface) {
   const group = new Group();
   addBox(group, width + 0.16, height + 0.16, depth, frameMaterial, [0, 0, 0], 0.06);
-  const screen = new Mesh(new PlaneGeometry(width, height), new MeshBasicMaterial({ map: texture, toneMapped: false }));
-  screen.position.z = depth / 2 + 0.009;
+  const screenMaterial = texture
+    ? new MeshBasicMaterial({ map: texture, side: DoubleSide, depthTest: false, toneMapped: false })
+    : new MeshStandardMaterial({ color: TEAL, emissive: TEAL, emissiveIntensity: 0.42, roughness: 0.32, metalness: 0.2 });
+  const screen = new Mesh(new PlaneGeometry(width, height), screenMaterial);
+  screen.position.z = depth / 2 + 0.09;
+  screen.renderOrder = 10;
   group.add(screen);
   return group;
 }
@@ -139,12 +141,24 @@ function createCinemaCamera(materials: {
 }) {
   const root = new Group();
   root.name = 'UFirst fictional cinema camera';
-  root.position.set(0, 1.5, 0);
+  root.position.set(2.2, 0, 0);
 
   addBox(root, 1.65, 1.08, 0.86, materials.charcoal, [0, 0, -0.18], 0.1);
   addBox(root, 1.35, 0.16, 0.75, materials.metal, [0, 0.62, -0.18], 0.04);
   addBox(root, 0.7, 0.14, 0.55, materials.red, [0, 0.72, -0.18], 0.03);
   addBox(root, 0.2, 0.84, 0.07, materials.metal, [-0.86, 0, -0.18], 0.02);
+
+  const cameraBase = new Mesh(new CylinderGeometry(1.45, 1.62, 0.22, 64), materials.metal);
+  cameraBase.position.set(0, 0.11, -0.18);
+  root.add(cameraBase);
+  addCylinder(root, 0.13, 1.05, materials.metal, [0, 0.65, -0.18], 24);
+  addBox(root, 0.72, 0.12, 0.62, materials.charcoal, [0, 1.17, -0.18], 0.03);
+
+  const cameraBadge = createUShape(materials.red);
+  cameraBadge.name = 'UFirst camera badge';
+  cameraBadge.scale.setScalar(0.22);
+  cameraBadge.position.set(-0.38, 0.03, 0.28);
+  root.add(cameraBadge);
 
   for (let index = 0; index < 7; index += 1) {
     addBox(root, 0.58, 0.026, 0.035, materials.cream, [-0.63, 0.27 - index * 0.09, 0.28], 0.006);
@@ -230,7 +244,7 @@ function createDoorChamber(materials: { charcoal: Surface; metal: Surface; red: 
   addBox(root, 22, 0.7, 16, materials.charcoal, [0, 9.7, 0], 0.1);
   addBox(root, 0.8, 9.7, 16, materials.charcoal, [-10.5, 4.85, 0], 0.1);
   addBox(root, 0.8, 9.7, 16, materials.charcoal, [10.5, 4.85, 0], 0.1);
-  addPlane(root, 22, 16, new MeshStandardMaterial({ color: FLOOR, roughness: 0.64, metalness: 0.12 }), [0, 0, 0], -Math.PI / 2);
+  addPlane(root, 28, 34, new MeshStandardMaterial({ color: 0x111c1f, roughness: 0.58, metalness: 0.16 }), [0, 0, 0], -Math.PI / 2);
 
   addBox(root, 0.75, 10.2, 1.25, materials.metal, [-6.15, 5.1, 0], 0.08);
   addBox(root, 0.75, 10.2, 1.25, materials.metal, [6.15, 5.1, 0], 0.08);
@@ -261,11 +275,11 @@ function createDoorChamber(materials: { charcoal: Surface; metal: Surface; red: 
 
   const lightSurface = new MeshBasicMaterial({ color: 0xffd7a2, transparent: true, opacity: 0.02, side: DoubleSide, toneMapped: false });
   const lightLeak = addPlane(root, 10, 8, lightSurface, [0, 4.5, -0.58]);
-  const light = new PointLight(0xffd5a0, 0.2, 18, 1.4);
+  const light = new PointLight(0xffd5a0, 0.8, 24, 1.4);
   light.position.set(0, 4.8, -1.6);
   root.add(light);
 
-  const foregroundBlock = addBox(root, 3.4, 4.8, 2.8, materials.charcoal, [-8.5, 2.4, 4.0], 0.12);
+  const foregroundBlock = addBox(root, 2.4, 3.2, 1.8, materials.charcoal, [-8.5, 1.6, 4.0], 0.12);
   foregroundBlock.rotation.y = 0.08;
   const threshold = addBox(root, 12.2, 0.18, 1.5, materials.cream, [0, 0.12, 0.05], 0.03);
   threshold.castShadow = false;
@@ -276,8 +290,12 @@ function createDoorChamber(materials: { charcoal: Surface; metal: Surface; red: 
 function createPhone(texture: Texture, materials: { charcoal: Surface; metal: Surface }) {
   const phone = new Group();
   addBox(phone, 0.82, 1.55, 0.14, materials.charcoal, [0, 0, 0], 0.09);
-  const screen = new Mesh(new PlaneGeometry(0.68, 1.35), new MeshBasicMaterial({ map: texture, toneMapped: false }));
-  screen.position.z = 0.078;
+  const screenMaterial = texture
+    ? new MeshBasicMaterial({ map: texture, side: DoubleSide, depthTest: false, toneMapped: false })
+    : new MeshStandardMaterial({ color: TEAL, emissive: TEAL, emissiveIntensity: 0.42, roughness: 0.32, metalness: 0.2 });
+  const screen = new Mesh(new PlaneGeometry(0.68, 1.35), screenMaterial);
+  screen.position.z = 0.14;
+  screen.renderOrder = 10;
   phone.add(screen);
   [0.26, -0.22].forEach((x) => addBox(phone, 0.055, 0.025, 0.025, materials.metal, [x, -0.77, 0.03], 0.008));
   return phone;
@@ -305,10 +323,10 @@ function createStudioWorld(textures: Texture[], materials: { charcoal: Surface; 
   const root = new Group();
   root.name = 'UFirst connected production studio';
   const floorMaterial = new MeshStandardMaterial({ color: FLOOR, roughness: 0.58, metalness: 0.22 });
-  addPlane(root, 22, 38, floorMaterial, [0, 0, -44], -Math.PI / 2);
-  addBox(root, 0.55, 8, 38, materials.charcoal, [-10.5, 4, -44], 0.08);
-  addBox(root, 0.55, 8, 38, materials.charcoal, [10.5, 4, -44], 0.08);
-  addBox(root, 21, 0.5, 38, materials.charcoal, [0, 7.6, -44], 0.08);
+  addPlane(root, 24, 60, floorMaterial, [0, 0, -44], -Math.PI / 2);
+  [-8.8, 8.8].forEach((x) => {
+    [-32, -44, -56].forEach((z) => addBox(root, 0.34, 5.8, 0.34, materials.charcoal, [x, 2.9, z], 0.04));
+  });
 
   const platform = new Mesh(new CylinderGeometry(2.3, 2.45, 0.22, 64), materials.metal);
   platform.position.set(0, 0.14, -31.6);
@@ -369,7 +387,7 @@ function createStudioWorld(textures: Texture[], materials: { charcoal: Surface; 
 function createPortfolioWorld(textures: Texture[], materials: { charcoal: Surface; metal: Surface; red: Surface; cream: Surface }) {
   const root = new Group();
   root.name = 'UFirst physical project gallery';
-  addPlane(root, 22, 20, new MeshStandardMaterial({ color: 0x0a0d0e, roughness: 0.62, metalness: 0.25 }), [0, 0, -54], -Math.PI / 2);
+  addPlane(root, 24, 34, new MeshStandardMaterial({ color: 0x101a1c, roughness: 0.56, metalness: 0.2 }), [0, 0, -54], -Math.PI / 2);
 
   const displays = [
     { position: [-4.0, 2.4, -50.5] as [number, number, number], rotation: 0.12, texture: textures[0] },
@@ -385,8 +403,8 @@ function createPortfolioWorld(textures: Texture[], materials: { charcoal: Surfac
     addBox(root, 2.5, 0.16, 0.55, materials.cream, [position[0], 0.18, position[2]], 0.03);
     if (index === 1) addBox(root, 0.14, 1.35, 0.06, materials.red, [position[0], 2.4, position[2] + 0.16], 0.02);
   });
-  const finalBillboard = createScreen(5.8, 2.8, 0.3, textures[4], materials.metal);
-  finalBillboard.position.set(0, 3.8, -59.0);
+  const finalBillboard = createScreen(4.6, 2.2, 0.3, textures[4], materials.metal);
+  finalBillboard.position.set(0, 3.3, -59.0);
   root.add(finalBillboard);
   const finalLight = new PointLight(0xffd6a6, 2.5, 10, 2);
   finalLight.position.set(0, 3.8, -58.0);
@@ -408,18 +426,28 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
   const projectTextures = textures.slice(5).length ? textures.slice(5) : textures.slice(0, 3);
   while (projectTextures.length < 3) projectTextures.push(textures[0]);
 
-  const charcoal = new MeshStandardMaterial({ color: CHARCOAL, roughness: 0.42, metalness: 0.68 });
-  const metal = new MeshStandardMaterial({ color: METAL, roughness: 0.28, metalness: 0.82 });
-  const red = new MeshStandardMaterial({ color: RED, roughness: 0.3, metalness: 0.42 });
-  const teal = new MeshStandardMaterial({ color: TEAL, roughness: 0.28, metalness: 0.5 });
+  const charcoal = new MeshStandardMaterial({ color: 0x304247, roughness: 0.34, metalness: 0.42, emissive: 0x0a1315, emissiveIntensity: 0.24 });
+  const metal = new MeshStandardMaterial({ color: 0x87959a, roughness: 0.24, metalness: 0.68, emissive: 0x11181a, emissiveIntensity: 0.08 });
+  const red = new MeshStandardMaterial({ color: RED, roughness: 0.3, metalness: 0.36, emissive: 0x4e0506, emissiveIntensity: 0.22 });
+  const teal = new MeshStandardMaterial({ color: TEAL, roughness: 0.28, metalness: 0.42, emissive: 0x062e34, emissiveIntensity: 0.28 });
   const cream = new MeshStandardMaterial({ color: CREAM, roughness: 0.38, metalness: 0.25 });
   const glass = new MeshPhysicalMaterial({ color: 0x183a40, roughness: 0.08, metalness: 0.15, transmission: 0.28, thickness: 0.08, transparent: true, opacity: 0.78 });
 
   const cameraSet = createCinemaCamera({ charcoal, metal, red, teal, glass, cream });
-  const cameraFloor = new Mesh(new PlaneGeometry(20, 18), new MeshStandardMaterial({ color: FLOOR, roughness: 0.62, metalness: 0.2 }));
+  const cameraFloor = new Mesh(new PlaneGeometry(30, 42), new MeshStandardMaterial({ color: FLOOR, roughness: 0.62, metalness: 0.2 }));
   cameraFloor.rotation.x = -Math.PI / 2;
   cameraFloor.position.set(0, 0, 0);
   cameraSet.root.add(cameraFloor);
+  const cameraBackdrop = new Mesh(new PlaneGeometry(30, 24), new MeshStandardMaterial({ color: 0x0d171a, roughness: 0.72, metalness: 0.12 }));
+  cameraBackdrop.position.set(0, 8, -12);
+  cameraSet.root.add(cameraBackdrop);
+  const heroWarmLight = new PointLight(0xffd6ad, 14, 15, 2);
+  heroWarmLight.position.set(2.8, 4.8, 5.5);
+  cameraSet.root.add(heroWarmLight);
+  const heroTealLight = new PointLight(TEAL, 10, 13, 2);
+  heroTealLight.position.set(-3.4, 2.2, 3.8);
+  cameraSet.root.add(heroTealLight);
+  cameraSet.root.scale.setScalar(1.16);
 
   const doorSet = createDoorChamber({ charcoal, metal, red, cream });
   const studioSet = createStudioWorld(textures, { charcoal, metal, red, teal, cream });
@@ -433,12 +461,12 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     textures,
     getPrimaryObjects: () => [cameraSet.root, doorSet.root, studioSet.root, portfolioSet.root],
     update(progress, delta) {
-      const opening = localSceneProgress(progress, 0.48, 0.6);
+      const opening = localSceneProgress(progress, 0.4, 0.54);
       const doorAngle = opening * opening * (3 - 2 * opening) * Math.PI * 0.42;
       doorSet.leftPivot.rotation.y = -doorAngle;
       doorSet.rightPivot.rotation.y = doorAngle;
       doorSet.light.intensity = 0.18 + opening * 4.8;
-      (doorSet.lightLeak.material as MeshBasicMaterial).opacity = 0.02 + opening * 0.28;
+      (doorSet.lightLeak.material as MeshBasicMaterial).opacity = 0.01 + opening * 0.08;
 
       const lensProgress = localSceneProgress(progress, 0.14, 0.28);
       cameraSet.focusRings.forEach((ring, index) => { ring.rotation.z += delta * (0.18 + index * 0.08) * (1 + lensProgress); });
@@ -455,7 +483,7 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
 
       cameraSet.root.visible = progress < 0.33;
       doorSet.root.visible = progress >= 0.25 && progress < 0.67;
-      studioSet.root.visible = progress >= 0.57 && progress < 0.95;
+      studioSet.root.visible = progress >= 0.5 && progress < 0.82;
       portfolioSet.root.visible = progress >= 0.8;
     },
     dispose() {
@@ -475,9 +503,9 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
 }
 
 export function addCinematicLighting(scene: { add: (...objects: Array<AmbientLight | DirectionalLight>) => void }) {
-  const ambient = new AmbientLight(0xffffff, 0.22);
-  const key = new DirectionalLight(0xffead1, 2.2);
-  key.position.set(4, 8, 8);
+  const ambient = new AmbientLight(0xffffff, 0.42);
+  const key = new DirectionalLight(0xffead1, 3.4);
+  key.position.set(5, 8, 10);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
   key.shadow.camera.near = 0.1;
@@ -486,7 +514,7 @@ export function addCinematicLighting(scene: { add: (...objects: Array<AmbientLig
   key.shadow.camera.right = 14;
   key.shadow.camera.top = 14;
   key.shadow.camera.bottom = -4;
-  const rim = new DirectionalLight(0x5ed0d9, 2.4);
-  rim.position.set(-7, 4, -8);
+  const rim = new DirectionalLight(0x5ed0d9, 3.5);
+  rim.position.set(-8, 5, -7);
   scene.add(ambient, key, rim);
 }
