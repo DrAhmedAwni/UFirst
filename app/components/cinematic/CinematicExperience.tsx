@@ -73,6 +73,7 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     manager.onLoad = () => setLoadingProgress(100);
     manager.onError = () => setLoadingProgress((value) => Math.max(value, 88));
     const world = createCinematicWorld(manager, assets, { mobile });
+    scene.add(...world.roots);
     let disposed = false;
     let frame = 0;
     let lastTime = performance.now();
