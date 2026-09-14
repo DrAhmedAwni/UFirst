@@ -1,0 +1,63 @@
+{
+  "experience": "ufirst-one-camera-journey",
+  "scope": "UFirst only",
+  "assets": [
+    {
+      "id": "camera-procedural-v1",
+      "name": "UFirst cinematic camera",
+      "kind": "model",
+      "path": "runtime://CinematicWorld",
+      "source": "Original procedural Three.js geometry",
+      "license": "UFirst project original",
+      "status": "in-progress",
+      "components": ["CameraBody", "LensHousing", "FrontLens", "Aperture", "Shutter", "Sensor", "Processor", "Memory", "Viewfinder"],
+      "timelineRanges": ["reveal", "lens-entry", "exploded-system", "reassembly", "exit"],
+      "mobileReady": true
+    },
+    {
+      "id": "camera-production-glb",
+      "name": "UFirst production camera model",
+      "kind": "model",
+      "path": "public/models/ufirst-camera-production.glb",
+      "source": "Required production asset",
+      "license": "To be supplied and approved",
+      "status": "required",
+      "components": ["CameraBody", "LensHousing", "FrontLens", "LensGlass01", "LensGlass02", "Aperture", "Shutter", "Sensor", "Processor", "Display", "Buttons", "Dials", "InternalFrame"],
+      "timelineRanges": ["reveal", "lens-entry", "exploded-system", "reassembly", "exit"],
+      "mobileReady": false
+    },
+    {
+      "id": "service-surfaces",
+      "name": "UFirst service imagery",
+      "kind": "texture",
+      "path": "public/assets/journey/",
+      "source": "UFirst project assets",
+      "license": "Project-owned / confirm before public launch",
+      "status": "temporary",
+      "timelineRanges": ["services", "system"],
+      "mobileReady": true
+    },
+    {
+      "id": "work-surfaces",
+      "name": "UFirst selected work imagery",
+      "kind": "texture",
+      "path": "public/assets/journey/",
+      "source": "UFirst project assets",
+      "license": "Project-owned / confirm before public launch",
+      "status": "temporary",
+      "timelineRanges": ["work", "finale"],
+      "mobileReady": true
+    },
+    {
+      "id": "camera-exterior-fallback",
+      "name": "Camera exterior fallback image",
+      "kind": "fallback",
+      "path": "public/assets/camera/ufirst-camera-exterior-v2.png",
+      "source": "Existing UFirst project asset",
+      "license": "Project-owned / confirm before public launch",
+      "status": "approved",
+      "timelineRanges": ["webgl-failure", "reduced-motion"],
+      "mobileReady": true
+    }
+  ]
+}

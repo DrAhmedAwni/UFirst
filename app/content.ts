@@ -19,6 +19,14 @@ export type Project = {
   image: ManagedImage;
 };
 
+export type ExperienceMoment = {
+  number: string;
+  scene: string;
+  title: string;
+  body: string;
+  component: string;
+};
+
 export type SiteContent = {
   brand: {
     name: string;
@@ -63,6 +71,11 @@ export type SiteContent = {
     headline: string;
     emphasis: string;
     body: string;
+  };
+  experience: {
+    scrollLabel: string;
+    locationLabel: string;
+    moments: ExperienceMoment[];
   };
 };
 
@@ -181,5 +194,19 @@ export const defaultContent: SiteContent = {
     headline: 'Got a good one?',
     emphasis: "Let's make it real.",
     body: 'Tell us what you are building, where it needs to go, and what is getting in the way. We will take it from there.',
+  },
+  experience: {
+    scrollLabel: 'Scroll to direct the film',
+    locationLabel: 'Cairo / Egypt · Working globally',
+    moments: [
+      { number: '01', scene: 'reveal', title: 'Make the first frame count.', body: 'UFirst brings strategy, story, and production into one clear point of view.', component: 'The exterior / A point of view' },
+      { number: '02', scene: 'system', title: 'Earn attention.', body: 'Move closer. The lens is where a signal becomes something people can feel.', component: 'The lens / Find the focus' },
+      { number: '03', scene: 'about', title: 'Focus the story.', body: 'A sharper point of view gives ambitious brands a clearer lane to own.', component: 'The aperture / Shape the story' },
+      { number: '04', scene: 'services', title: 'Make the move.', body: 'Brand, creative, production, digital, and growth work as one connected system.', component: 'The shutter / Make it move' },
+      { number: '05', scene: 'work', title: 'Turn insight into work.', body: 'Ideas become real output: built for attention, remembered for a reason.', component: 'The sensor / See the signal' },
+      { number: '06', scene: 'process', title: 'Carry it forward.', body: 'A disciplined process keeps the idea moving from first signal to measured momentum.', component: 'The processor / Build what lasts' },
+      { number: '07', scene: 'contact', title: 'See what is possible.', body: 'Bring the brief, the ambition, or the problem. We will find the frame worth making.', component: 'The viewfinder / Start the conversation' },
+      { number: '08', scene: 'exit', title: 'Make your next bold move.', body: 'The camera returns complete. Now the next frame belongs to your brand.', component: 'The final frame / UFirst' },
+    ],
   },
 };

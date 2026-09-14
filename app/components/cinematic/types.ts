@@ -41,6 +41,7 @@ export type CinematicAssetUrls = {
 
 export type CinematicWorld = {
   update: (progress: number, delta: number) => void;
+  setPointer?: (x: number, y: number) => void;
   dispose: () => void;
   roots: Group[];
   textures: Texture[];

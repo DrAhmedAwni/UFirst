@@ -53,6 +53,11 @@ function mergeContent(value: Partial<SiteContent>): SiteContent {
   if (hero.background.src === '/assets/hero-camera.jpg') hero.background = defaultContent.hero.background;
   const about = { ...defaultContent.about, ...value.about };
   if (about.image.src === '/assets/agency-page.jpg') about.image = defaultContent.about.image;
+  const experience = {
+    ...defaultContent.experience,
+    ...value.experience,
+    moments: value.experience?.moments?.length ? value.experience.moments : defaultContent.experience.moments,
+  };
   return {
     ...defaultContent,
     ...value,
@@ -66,6 +71,7 @@ function mergeContent(value: Partial<SiteContent>): SiteContent {
     process: value.process?.length ? value.process : defaultContent.process,
     projects,
     contact: { ...defaultContent.contact, ...value.contact },
+    experience,
   };
 }
 

@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
+/* eslint-disable @next/next/no-html-link-for-pages */
 
-import Link from 'next/link';
 import { useEffect, useState, type ChangeEvent } from 'react';
 import type { Service, SiteContent } from '@/app/content';
 
@@ -57,6 +57,20 @@ export default function AdminEditor({ initialContent, identity }: { initialConte
     setContent((current) => ({ ...current, about: { ...current.about, image: { ...current.about.image, src } } }));
   }
 
+  function updateExperience(field: 'scrollLabel' | 'locationLabel', value: string) {
+    setContent((current) => ({ ...current, experience: { ...current.experience, [field]: value } }));
+  }
+
+  function updateExperienceMoment(index: number, field: 'title' | 'body' | 'component', value: string) {
+    setContent((current) => ({
+      ...current,
+      experience: {
+        ...current.experience,
+        moments: current.experience.moments.map((moment, momentIndex) => momentIndex === index ? { ...moment, [field]: value } : moment),
+      },
+    }));
+  }
+
   function updateService(index: number, patch: Partial<Service>) {
     setContent((current) => ({ ...current, services: current.services.map((service, serviceIndex) => serviceIndex === index ? { ...service, ...patch } : service) }));
   }
@@ -104,7 +118,7 @@ export default function AdminEditor({ initialContent, identity }: { initialConte
 
   return (
     <main className="admin-shell">
-      <header className="admin-nav"><Link className="brand admin-brand" href="/"><span className="brand-glyph">U</span><span>FIRST</span></Link><div className="admin-nav-right"><span className="admin-user">{identity}</span><Link className="admin-public-link" href="/">View public site ↗</Link></div></header>
+      <header className="admin-nav"><a className="brand admin-brand" href="/"><span className="brand-glyph">U</span><span>FIRST</span></a><div className="admin-nav-right"><span className="admin-user">{identity}</span><a className="admin-public-link" href="/">View public site ↗</a></div></header>
       <div className="admin-layout">
         <aside className="admin-sidebar"><p className="admin-kicker">UFirst / Control room</p><h1>Keep the work moving.</h1><p>Update the visual system and content that powers the public landing page.</p><div className="admin-tabs"><button className={activeTab === 'content' ? 'admin-tab admin-tab-active' : 'admin-tab'} type="button" onClick={() => setActiveTab('content')}><span>01</span> Content</button><button className={activeTab === 'media' ? 'admin-tab admin-tab-active' : 'admin-tab'} type="button" onClick={() => setActiveTab('media')}><span>02</span> Media library</button></div><div className="admin-sidebar-note"><span className="admin-status-dot" />{status}</div></aside>
         <section className="admin-main">
@@ -112,7 +126,9 @@ export default function AdminEditor({ initialContent, identity }: { initialConte
 
           {activeTab === 'content' ? <div className="admin-content-grid">
             <section className="admin-storage-notice admin-card-wide"><span className="admin-status-dot" /><p>Text and content publishing are available. Uploads are paused until R2 is enabled, but you can paste a trusted image URL in any image control and publish it without returning to a developer.</p></section>
+            <section className="admin-asset-status admin-card-wide"><div><span className="admin-kicker">3D model</span><strong>Procedural UFirst camera</strong><small>Interactive geometry in the current experience</small></div><div><span className="admin-kicker">Scene surfaces</span><strong>Editable UFirst imagery</strong><small>Mapped onto physical screens inside the camera</small></div><div><span className="admin-kicker">Fallback</span><strong>Hero camera image</strong><small>Used when WebGL is unavailable or motion is reduced</small></div></section>
             <section className="admin-card admin-card-wide"><div className="admin-card-heading"><div><p className="admin-kicker">01 / Hero</p><h3>The first impression</h3></div><ImageUpload disabled={!mediaEnabled} label="Replace hero background" src={content.hero.background.src} onChange={(event) => handleImageChange(event, 'hero background', updateHeroImage)} onSourceChange={updateHeroImage} /></div><div className="admin-form-grid"><Field label="Eyebrow" value={content.hero.eyebrow} onChange={(value) => updateHero('eyebrow', value)} /><Field label="Headline" value={content.hero.headline} onChange={(value) => updateHero('headline', value)} /><Field label="Emphasis" value={content.hero.emphasis} onChange={(value) => updateHero('emphasis', value)} /><Field label="Primary CTA" value={content.hero.primaryCta} onChange={(value) => updateHero('primaryCta', value)} /><Field label="Secondary CTA" value={content.hero.secondaryCta} onChange={(value) => updateHero('secondaryCta', value)} /><Field wide label="Supporting text" value={content.hero.body} onChange={(value) => updateHero('body', value)} multiline /></div></section>
+            <section className="admin-card admin-card-wide"><div className="admin-card-heading"><div><p className="admin-kicker">01B / Experience copy</p><h3>Direct the journey</h3></div><span className="admin-card-hint">These captions appear inside the persistent 3D camera world.</span></div><div className="admin-form-grid"><Field label="Location label" value={content.experience.locationLabel} onChange={(value) => updateExperience('locationLabel', value)} /><Field label="Scroll instruction" value={content.experience.scrollLabel} onChange={(value) => updateExperience('scrollLabel', value)} /></div><div className="admin-experience-list">{content.experience.moments.map((moment, index) => <article className="admin-experience-row" key={moment.number}><div className="admin-experience-number">{moment.number}<span>{moment.scene}</span></div><div className="admin-experience-fields"><Field label="Moment title" value={moment.title} onChange={(value) => updateExperienceMoment(index, 'title', value)} /><Field label="Moment description" value={moment.body} onChange={(value) => updateExperienceMoment(index, 'body', value)} multiline /></div><Field label="Component label" value={moment.component} onChange={(value) => updateExperienceMoment(index, 'component', value)} /></article>)}</div></section>
             <section className="admin-card"><div className="admin-card-heading"><div><p className="admin-kicker">01A / Backgrounds</p><h3>Set the texture</h3></div><ImageUpload disabled={!mediaEnabled} label="Replace pattern" src={content.backgrounds.pattern.src} onChange={(event) => handleImageChange(event, 'background pattern', updatePatternImage)} onSourceChange={updatePatternImage} /></div><p className="admin-card-hint">This pattern is reused across the hero and dark content sections.</p></section>
             <section className="admin-card"><div className="admin-card-heading"><div><p className="admin-kicker">02 / About</p><h3>Make the work matter.</h3></div><ImageUpload disabled={!mediaEnabled} label="Replace about image" src={content.about.image.src} onChange={(event) => handleImageChange(event, 'about image', updateAboutImage)} onSourceChange={updateAboutImage} /></div><div className="admin-form-stack"><Field label="Headline" value={content.about.headline} onChange={(value) => updateAbout('headline', value)} /><Field label="Emphasis" value={content.about.emphasis} onChange={(value) => updateAbout('emphasis', value)} /><Field label="Body" value={content.about.body} onChange={(value) => updateAbout('body', value)} multiline /></div></section>
             <section className="admin-card admin-card-wide"><div className="admin-card-heading"><div><p className="admin-kicker">02A / 3D system</p><h3>Replace the scene surfaces</h3></div><span className="admin-card-hint">These images are mapped onto the live cinematic 3D world as screen content.</span></div><div className="admin-system-assets">{([['dashboard', 'Dashboard surface'], ['mobile', 'Mobile surface'], ['browser', 'Browser surface']] as const).map(([field, label]) => <div className="admin-system-asset" key={field}><img src={content.system[field].src} alt="" /><ImageUpload disabled={!mediaEnabled} label={label} src={content.system[field].src} onChange={(event) => handleImageChange(event, `3D ${label.toLowerCase()}`, (src) => updateSystemAsset(field, src))} onSourceChange={(src) => updateSystemAsset(field, src)} /></div>)}</div></section>
@@ -130,5 +146,17 @@ function Field({ label, value, onChange, multiline = false, wide = false }: { la
 }
 
 function ImageUpload({ label, src, onChange, onSourceChange, disabled = false }: { label: string; src: string; onChange: (event: ChangeEvent<HTMLInputElement>) => void; onSourceChange: (src: string) => void; disabled?: boolean }) {
-  return <label className={disabled ? 'image-upload image-upload-disabled' : 'image-upload'}><span>{label}</span><input type="file" accept="image/*" onChange={onChange} disabled={disabled} /><input className="image-source-input" type="text" value={src} onChange={(event) => onSourceChange(event.target.value)} placeholder="/assets/... or https://..." aria-label={`${label} source URL`} /><small>{disabled ? 'Upload paused; paste a source URL, then publish' : src.startsWith('/api/media/') ? 'Managed media' : 'Current asset'}</small></label>;
+  const guidance = imageGuidance(label);
+  const [dimensions, setDimensions] = useState('');
+  return <label className={disabled ? 'image-upload image-upload-disabled' : 'image-upload'}><span>{label}</span><img key={src} className="image-upload-preview" src={src} alt="" onLoad={(event) => setDimensions(`${event.currentTarget.naturalWidth} × ${event.currentTarget.naturalHeight}px`)} onError={() => setDimensions('Image dimensions unavailable')} /><input type="file" accept="image/*" onChange={onChange} disabled={disabled} /><input className="image-source-input" type="text" value={src} onChange={(event) => onSourceChange(event.target.value)} placeholder="/assets/... or https://..." aria-label={`${label} source URL`} /><small>{dimensions ? `${dimensions} · ` : ''}{disabled ? 'Upload paused; paste a source URL, then publish' : src.startsWith('/api/media/') ? 'Managed media' : 'Current asset'}</small><small className="image-upload-guidance">{guidance}</small></label>;
+}
+
+function imageGuidance(label: string) {
+  const value = label.toLowerCase();
+  if (value.includes('pattern')) return 'Recommended: 1600 × 900px or larger · tileable texture';
+  if (value.includes('hero')) return 'Recommended: 1920 × 1080px or larger · 16:9';
+  if (value.includes('about')) return 'Recommended: 1200 × 1400px or larger · portrait crop';
+  if (value.includes('3d') || value.includes('surface')) return 'Recommended: 1600 × 1000px or larger · landscape';
+  if (value.includes('project')) return 'Recommended: 1400 × 1400px or larger · square-safe';
+  return 'Recommended: 1200 × 900px or larger · landscape';
 }

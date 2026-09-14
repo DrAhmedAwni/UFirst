@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   ACESFilmicToneMapping,
-  Color,
   LoadingManager,
   PerspectiveCamera,
   SRGBColorSpace,
@@ -13,7 +12,9 @@ import {
 import type { SiteContent } from '@/app/content';
 import { createCinematicWorld } from './CinematicWorld';
 import { CameraRig } from './CameraRig';
+import { cinematicPixelRatio, detectCinematicQuality } from './quality-tiers';
 import { progressFromDocument, sceneAt } from './ScrollDirector';
+import { CINEMATIC_MOMENTS, momentAt } from './scene-moments';
 import type { CinematicAssetUrls } from './types';
 
 export default function CinematicExperience({ content, paused, onPausedChange }: { content: SiteContent; paused: boolean; onPausedChange: (paused: boolean) => void }) {
@@ -58,14 +59,14 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
 
     window.setTimeout(() => setWebglAvailable(true), 0);
     const mobile = window.matchMedia('(max-width: 720px)').matches;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobile ? 1.1 : 1.5));
+    const quality = detectCinematicQuality(mobile);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, cinematicPixelRatio(quality, mobile)));
     renderer.outputColorSpace = SRGBColorSpace;
     renderer.toneMapping = ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
     renderer.setClearColor(0x050708, 0);
 
     const scene = new Scene();
-    scene.background = new Color(0x050708);
     const camera = new PerspectiveCamera(42, 1, 0.05, 100);
     const rig = new CameraRig();
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -73,7 +74,7 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     manager.onProgress = (_url, loaded, total) => setLoadingProgress(Math.max(12, Math.round((loaded / Math.max(total, 1)) * 100)));
     manager.onLoad = () => setLoadingProgress(100);
     manager.onError = () => setLoadingProgress((value) => Math.max(value, 88));
-    const world = createCinematicWorld(manager, assets, { mobile });
+    const world = createCinematicWorld(manager, assets, { mobile, quality });
     scene.add(...world.roots);
     let disposed = false;
     let frame = 0;
@@ -106,9 +107,20 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     };
     const visibility = () => { if (!document.hidden) schedule(); };
     const onScroll = () => schedule();
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.pointerType && event.pointerType !== 'mouse') return;
+      world.setPointer?.((event.clientX / Math.max(window.innerWidth, 1) - 0.5) * 2, (event.clientY / Math.max(window.innerHeight, 1) - 0.5) * 2);
+      schedule();
+    };
+    const onPointerLeave = () => {
+      world.setPointer?.(0, 0);
+      schedule();
+    };
     resize();
     window.addEventListener('resize', resize);
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('pointerleave', onPointerLeave);
     document.addEventListener('visibilitychange', visibility);
     motionPreference.addEventListener('change', schedule);
     schedule();
@@ -118,6 +130,8 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
       if (frame) cancelAnimationFrame(frame);
       window.removeEventListener('resize', resize);
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerleave', onPointerLeave);
       document.removeEventListener('visibilitychange', visibility);
       motionPreference.removeEventListener('change', schedule);
       document.documentElement.classList.remove('cinematic-deep');
@@ -128,6 +142,10 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
   }, [assets]);
 
   const activeScene = sceneAt(progress);
+  const activeMoment = momentAt(progress);
+  const authoredMoment = content.experience.moments.find((moment) => moment.number === activeMoment.number);
+  const displayMoment = authoredMoment ? { ...activeMoment, ...authoredMoment } : activeMoment;
+  const lightScene = activeScene.scene === 'services' || activeScene.scene === 'process';
   const heroOpacity = progress < 0.16 ? 1 - Math.max(0, progress - 0.04) / 0.12 : 0;
   const sceneOpacity = 0.9;
 
@@ -136,9 +154,9 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
   }
 
   return (
-    <section className="cinematic-sequence" id="top" ref={sequenceRef} aria-labelledby="cinematic-title">
+     <section className={lightScene ? 'cinematic-sequence cinematic-on-light' : 'cinematic-sequence'} id="top" ref={sequenceRef} aria-labelledby="cinematic-title">
       <div className="cinematic-sticky">
-        <div className="cinematic-fallback" style={{ '--cinematic-fallback': `url('${content.hero.background.src}')` } as CSSProperties} aria-hidden="true" />
+         <div className="cinematic-fallback" style={{ '--cinematic-fallback': `url('${content.hero.background.src}')`, opacity: webglAvailable ? 0 : 0.72 } as CSSProperties} aria-hidden="true" />
         <canvas className="cinematic-canvas" ref={canvasRef} aria-hidden="true" />
         <div className="cinematic-atmosphere" aria-hidden="true" />
         <div className="cinematic-ui">
@@ -152,14 +170,27 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
               <button className="cinematic-skip cinematic-pause" type="button" aria-pressed={paused} onClick={() => onPausedChange(!paused)}>{paused ? 'Resume film' : 'Pause film'}</button>
             </div>
           </div>
-          <div className="cinematic-scene-label" style={{ opacity: sceneOpacity }} aria-live="polite">
-            <span>{activeScene.label}</span>
-            <strong>{String(Math.round(progress * 100)).padStart(2, '0')} / 100</strong>
+           <div className="cinematic-scene-label" style={{ opacity: sceneOpacity }} aria-live="polite">
+             <span>{activeScene.label}</span>
+             <strong>{String(Math.round(progress * 100)).padStart(2, '0')} / 100</strong>
+           </div>
+          <div className="cinematic-moment" aria-live="polite">
+            <span className="cinematic-moment-number">{displayMoment.number} / {displayMoment.component}</span>
+            <h2>{displayMoment.title}</h2>
+            <p>{displayMoment.body}</p>
+            <a href={`#${displayMoment.anchor}`}>Open this chapter <span>↗</span></a>
           </div>
+          <nav className="cinematic-route" aria-label="Experience chapters">
+            {CINEMATIC_MOMENTS.map((moment) => (
+              <a className={moment.scene === activeMoment.scene ? 'cinematic-route-item cinematic-route-item-active' : 'cinematic-route-item'} href={`#${moment.anchor}`} key={moment.number} aria-label={`Go to ${moment.title}`}>
+                <span>{moment.number}</span>
+              </a>
+            ))}
+          </nav>
           <div className="cinematic-footer">
-            <span>Cairo / Egypt · Working globally</span>
+            <span>{content.experience.locationLabel}</span>
             <span className="cinematic-line" />
-            <span>Scroll to direct the film ↓</span>
+            <span>{content.experience.scrollLabel} ↓</span>
           </div>
           <div className="cinematic-loader" data-ready={loadingProgress >= 100} aria-hidden={loadingProgress >= 100}>
             <span className="cinematic-loader-mark">U</span>

@@ -9,15 +9,16 @@ import {
   Mesh,
   MeshPhysicalMaterial,
   PointLight,
+  PlaneGeometry,
   SRGBColorSpace,
-  Sprite,
-  SpriteMaterial,
+  Texture,
   TextureLoader,
   TorusGeometry,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { Material, MeshPhysicalMaterialParameters, Object3D } from 'three';
 import type { CinematicAssetUrls, CinematicWorld } from './types';
+import type { CinematicQuality } from './quality-tiers';
 
 type MeshList = Mesh[];
 
@@ -30,6 +31,8 @@ type JourneyGroups = {
   processor: MeshList;
   memory: MeshList;
   exit: MeshList;
+  serviceSurfaces: MeshList;
+  workSurfaces: MeshList;
 };
 
 function createMaterial(materials: Material[], color: number, options: MeshPhysicalMaterialParameters = {}) {
@@ -39,6 +42,8 @@ function createMaterial(materials: Material[], color: number, options: MeshPhysi
     roughness: 0.32,
     clearcoat: 0.18,
     clearcoatRoughness: 0.25,
+    emissive: 0x020406,
+    emissiveIntensity: 0.04,
     transparent: true,
     side: DoubleSide,
     ...options,
@@ -195,9 +200,9 @@ function addSensor(group: Group, materials: Material[], groups: JourneyGroups) {
 }
 
 function addProcessor(group: Group, materials: Material[], groups: JourneyGroups) {
-  const board = createMaterial(materials, 0x124139, { roughness: 0.42, metalness: 0.38 });
-  const chip = createMaterial(materials, 0x4d5a5e, { roughness: 0.2, metalness: 0.75 });
-  const copper = createMaterial(materials, 0xc0803d, { roughness: 0.2, metalness: 0.84 });
+  const board = createMaterial(materials, 0x124139, { roughness: 0.42, metalness: 0.38, emissive: 0x06231f, emissiveIntensity: 0.18 });
+  const chip = createMaterial(materials, 0x4d5a5e, { roughness: 0.2, metalness: 0.75, emissive: 0x10191b, emissiveIntensity: 0.12 });
+  const copper = createMaterial(materials, 0xc0803d, { roughness: 0.2, metalness: 0.84, emissive: 0x321604, emissiveIntensity: 0.16 });
   const red = createMaterial(materials, 0xf11220, { roughness: 0.25, metalness: 0.5, emissive: 0x270207, emissiveIntensity: 0.32 });
 
   addBox(group, [4.1, 2.8, 0.12], [0, 0, -5.62], board, 'Processor board', groups.processor);
@@ -267,34 +272,59 @@ function addExit(group: Group, materials: Material[], groups: JourneyGroups) {
   addBox(group, [0.55, 0.12, 0.12], [1.25, 0.8, -9.24], red, 'Output signal two', groups.exit);
 }
 
-export function createCinematicWorld(manager: LoadingManager, assets: CinematicAssetUrls, { mobile }: { mobile: boolean }): CinematicWorld {
+function addContentScreen(parent: Group, texture: Texture, position: [number, number, number], size: [number, number], name: string, material: MeshPhysicalMaterial, list: MeshList, materials: Material[], rotationY = 0) {
+  const frame = addRoundedBox(parent, [size[0] + 0.18, size[1] + 0.18, 0.12], position, material, `${name} frame`, list, 0.04);
+  frame.rotation.y = rotationY;
+  const screenMaterial = new MeshPhysicalMaterial({
+    map: texture,
+    color: 0xffffff,
+    roughness: 0.52,
+    metalness: 0.12,
+    emissive: 0x1a4a50,
+    emissiveIntensity: 0.2,
+    transparent: true,
+    opacity: 0,
+  });
+  materials.push(screenMaterial);
+  const screen = new Mesh(new PlaneGeometry(size[0], size[1]), screenMaterial);
+  screen.name = name;
+  screen.position.set(position[0], position[1], position[2] - 0.08);
+  screen.rotation.y = rotationY;
+  screen.frustumCulled = false;
+  parent.add(screen);
+  list.push(screen);
+  return screenMaterial;
+}
+
+export function createCinematicWorld(manager: LoadingManager, assets: CinematicAssetUrls, { mobile, quality }: { mobile: boolean; quality: CinematicQuality }): CinematicWorld {
   const root = new Group();
   root.name = 'UFirst true camera interior journey';
   const materials: Material[] = [];
-  const groups: JourneyGroups = { shell: [], lens: [], aperture: [], shutter: [], sensor: [], processor: [], memory: [], exit: [] };
+  const groups: JourneyGroups = { shell: [], lens: [], aperture: [], shutter: [], sensor: [], processor: [], memory: [], exit: [], serviceSurfaces: [], workSurfaces: [] };
   const model = new Group();
   model.name = 'Original UFirst cinema camera';
   root.add(model);
-
   const textureLoader = new TextureLoader(manager);
-  const exteriorTexture = textureLoader.load(assets.cameraExterior);
-  exteriorTexture.colorSpace = SRGBColorSpace;
-  const explodedTexture = textureLoader.load(assets.cameraExploded);
-  explodedTexture.colorSpace = SRGBColorSpace;
-  const exteriorMaterial = new SpriteMaterial({ map: exteriorTexture, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false });
-  const explodedMaterial = new SpriteMaterial({ map: explodedTexture, transparent: true, opacity: 0, depthTest: false, depthWrite: false, toneMapped: false });
-  const exteriorPlate = new Sprite(exteriorMaterial);
-  exteriorPlate.name = 'Photorealistic camera exterior plate';
-  exteriorPlate.position.set(1.9, 0.2, -2.2);
-  exteriorPlate.scale.set(30, 16.875, 1);
-  exteriorPlate.renderOrder = 10;
-  root.add(exteriorPlate);
-  const explodedPlate = new Sprite(explodedMaterial);
-  explodedPlate.name = 'Photorealistic camera exploded assembly plate';
-  explodedPlate.position.set(0, 0, -5.4);
-  explodedPlate.scale.set(18, 10.125, 1);
-  explodedPlate.renderOrder = 10;
-  root.add(explodedPlate);
+  const surfaceUrls = quality === 'low' ? [...assets.services.slice(0, 3), assets.projects[0], assets.contact] : [...assets.services, ...assets.projects, assets.contact];
+  const surfaceTextures = surfaceUrls.map((url) => {
+    const texture = textureLoader.load(url);
+    texture.colorSpace = SRGBColorSpace;
+    return texture;
+  });
+  const surfaceMaterial = createMaterial(materials, 0x263238, { roughness: 0.3, metalness: 0.78 });
+  const surfaceGroup = new Group();
+  surfaceGroup.name = 'UFirst content surfaces inside the camera';
+  model.add(surfaceGroup);
+  const serviceSurfaceCount = Math.min(5, assets.services.length);
+  surfaceTextures.slice(0, serviceSurfaceCount).forEach((texture, index) => {
+    const x = index % 2 === 0 ? -3.08 : 3.08;
+    const y = index === 0 ? 1.62 : index === 1 ? -1.28 : index === 2 ? 1.08 : index === 3 ? -0.94 : 0.05;
+    const z = -3.5 - index * 0.64;
+    addContentScreen(surfaceGroup, texture, [x, y, z], [1.78, 1.08], `UFirst service surface ${String(index + 1).padStart(2, '0')}`, surfaceMaterial, groups.serviceSurfaces, materials, x < 0 ? 0.12 : -0.12);
+  });
+  surfaceTextures.slice(serviceSurfaceCount).forEach((texture, index) => {
+    addContentScreen(surfaceGroup, texture, [index === 0 ? -2.86 : 2.86, index === 0 ? 1.56 : -1.52, -6.95 - index * 0.68], [2.05, 1.22], `UFirst work surface ${String(index + 1).padStart(2, '0')}`, surfaceMaterial, groups.workSurfaces, materials, index === 0 ? 0.1 : -0.1);
+  });
 
   const lensGroup = new Group();
   lensGroup.name = '01 Lens / attention';
@@ -348,6 +378,10 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
   const backLight = new PointLight(0x5f9bc0, mobile ? 100 : 150, 28, 2);
   backLight.position.set(2, -4, -10);
   root.add(backLight);
+  const innerLight = new PointLight(0x8edbe0, mobile ? 90 : 145, 17, 2);
+  innerLight.name = 'Lens interior fill';
+  innerLight.position.set(-0.4, 0.6, -3.1);
+  root.add(innerLight);
 
   let elapsed = 0;
   const componentGroups: Array<{ meshes: MeshList; from: number; to: number }> = [
@@ -359,28 +393,51 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     { meshes: groups.memory, from: 0.68, to: 0.88 },
     { meshes: groups.exit, from: 0.82, to: 1 },
   ];
+  const spatialGroups = [
+    { group: lensGroup, x: 0.18, y: 0.04, z: 0.2, rotation: -0.012 },
+    { group: apertureGroup, x: -0.2, y: 0.1, z: 0.1, rotation: 0.018 },
+    { group: shutterGroup, x: 0.14, y: -0.12, z: 0, rotation: -0.01 },
+    { group: sensorGroup, x: -0.15, y: 0.08, z: -0.08, rotation: 0.008 },
+    { group: processorGroup, x: 0.2, y: -0.08, z: -0.04, rotation: -0.014 },
+    { group: memoryGroup, x: -0.18, y: 0.12, z: 0.04, rotation: 0.012 },
+    { group: exitGroup, x: 0.1, y: -0.05, z: -0.06, rotation: -0.008 },
+    { group: surfaceGroup, x: 0, y: 0, z: 0.08, rotation: 0 },
+  ];
+  const pointer = { x: 0, y: 0 };
 
   const update = (progress: number, delta: number) => {
     elapsed += delta;
     const value = MathUtils.clamp(progress, 0, 1);
     const exteriorBlend = 1 - MathUtils.smoothstep(value, 0.055, 0.17);
-    const geometryBlend = MathUtils.lerp(0.18, 1, 1 - exteriorBlend);
+    const returnBlend = MathUtils.smoothstep(value, 0.9, 0.99);
+    const exploded = MathUtils.smoothstep(value, 0.16, 0.29) * (1 - MathUtils.smoothstep(value, 0.72, 0.9));
+    const geometryBlend = MathUtils.lerp(0.35, 1, 1 - exteriorBlend);
     model.rotation.y = Math.sin(elapsed * 0.2) * 0.018;
     model.rotation.x = Math.cos(elapsed * 0.16) * 0.012;
+    model.rotation.y += pointer.x * 0.026;
+    model.rotation.x += pointer.y * 0.018;
+
+    spatialGroups.forEach(({ group, x, y, z, rotation }) => {
+      group.position.x = x * exploded;
+      group.position.y = y * exploded;
+      group.position.z = z * exploded;
+      group.rotation.z = rotation * exploded;
+    });
 
     componentGroups.forEach(({ meshes, from, to }, index) => {
       const focus = smoothWindow(value, from, to, 0.1);
       const exteriorLensFocus = index === 0 ? 1 - MathUtils.smoothstep(value, 0.12, 0.24) : 0;
-      setOpacity(meshes, MathUtils.lerp(0.08, 1, Math.max(focus, exteriorLensFocus)) * geometryBlend);
+      const visibility = Math.max(focus, exteriorLensFocus, value > 0.22 && value < 0.92 ? 0.18 : 0);
+      setOpacity(meshes, MathUtils.lerp(0.12, 1, visibility) * geometryBlend);
     });
 
-    const outside = 1 - MathUtils.smoothstep(value, 0.05, 0.24);
-    const returnOutside = MathUtils.smoothstep(value, 0.95, 1);
-    setOpacity(groups.shell, MathUtils.clamp(MathUtils.lerp(0.2, 0.95, Math.max(outside, returnOutside)), 0.18, 0.95) * geometryBlend);
-    exteriorMaterial.opacity = 0.82 * exteriorBlend;
-    explodedMaterial.opacity = 0.72 * MathUtils.smoothstep(value, 0.14, 0.22) * (1 - MathUtils.smoothstep(value, 0.34, 0.44));
+    setOpacity(groups.shell, MathUtils.clamp(MathUtils.lerp(0.02, 0.96, Math.max(exteriorBlend, returnBlend)), 0.02, 0.96));
+    setOpacity(groups.serviceSurfaces, smoothWindow(value, 0.27, 0.5, 0.06));
+    setOpacity(groups.workSurfaces, smoothWindow(value, 0.43, 0.78, 0.07) * (1 - MathUtils.smoothstep(value, 0.84, 0.94)));
     key.intensity = (mobile ? 130 : 190) + Math.sin(elapsed * 0.35) * 8;
     redLight.intensity = (mobile ? 120 : 180) + Math.cos(elapsed * 0.27) * 12;
+    backLight.intensity = (mobile ? 100 : 150) + Math.sin(elapsed * 0.22) * 10 + exploded * 35;
+    innerLight.intensity = (mobile ? 4 : 6) * (0.28 + (1 - exteriorBlend) * 0.72) + Math.sin(elapsed * 0.4) * 0.4;
   };
 
   const dispose = () => {
@@ -388,15 +445,17 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
       if (object instanceof Mesh) object.geometry.dispose();
     });
     materials.forEach((material) => material.dispose());
-    exteriorMaterial.dispose();
-    explodedMaterial.dispose();
   };
 
   return {
     update,
+    setPointer: (x, y) => {
+      pointer.x = MathUtils.clamp(x, -1, 1);
+      pointer.y = MathUtils.clamp(y, -1, 1);
+    },
     dispose,
     roots: [root],
-    textures: [exteriorTexture, explodedTexture],
+    textures: surfaceTextures,
     getPrimaryObjects: () => model.children as Object3D[],
   };
 }

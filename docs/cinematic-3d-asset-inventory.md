@@ -1,31 +1,47 @@
 # UFirst cinematic 3D asset inventory
 
-The current production scene is built from original procedural Three.js geometry. No third-party models or unlicensed GLB files were downloaded.
+Status: implementation checkpoint
+Scope: UFirst only
 
-## Production geometry
+The current experience uses original procedural Three.js geometry for the interactive camera. No third-party model or unlicensed GLB was downloaded. Raster images are used as approved UFirst content surfaces and fallback imagery; they are not used as the interactive camera body.
 
-| Asset | Source | Geometry | Runtime treatment |
+## Interactive geometry currently in the runtime
+
+| Asset | Runtime source | Purpose | Current state |
 | --- | --- | --- | --- |
-| Fictional cinema camera | Original procedural model | Beveled body, rails, handle, monitor, vents, lens barrel, rings, matte box | Real depth, PBR materials, contact shadows, animated indicator |
-| Lens and aperture | Original procedural model | Cylindrical optical groups, physical glass, eight extruded aperture blades | Focus-ring movement and scroll-driven aperture opening |
-| Monumental doors | Original procedural architecture | Thick wall, frame, two leaves, three hinge barrels per leaf, threshold, foreground structure | Correct left/right hinge pivots, weighted opening, light leak |
-| UFirst brand sculpture | Original procedural geometry | Extruded and beveled U mark | Studio platform with red/teal lighting |
-| Studio world | Original procedural environment | Floor, side walls, ceiling, production table, softbox, light sources | Spatially ordered production environment |
-| Devices and displays | Original procedural geometry | Physical phone, monitor/display frames, stands, billboard surfaces | Supplied UFirst imagery appears only as screen content |
-| Growth station | Original procedural geometry | Display frame, dimensional bars, base | Service-world performance focus |
+| Camera body shell | `app/components/cinematic/CinematicWorld.ts` | Exterior reveal, silhouette, reassembly | Procedural, beveled, PBR materials |
+| Lens housing and barrel | `CinematicWorld.ts` | Approach and lens-entry scale | Procedural concentric housing, focus ring, front glass |
+| Aperture assembly | `CinematicWorld.ts` | Aperture passage and focus metaphor | Eight separated blades, iris, timing ring |
+| Shutter assembly | `CinematicWorld.ts` | Production/execution chapter | Rails, blades, timing ring, screws |
+| Sensor assembly | `CinematicWorld.ts` | Insight/work chapter | Frame, sensor plate, contacts, readout ring |
+| Processor board | `CinematicWorld.ts` | Creative/process chapter | PCB, chips, traces, signal ring |
+| Memory bay and card | `CinematicWorld.ts` | Carry-forward/data chapter | Bay, card, contacts, transfer ring |
+| Viewfinder/exit module | `CinematicWorld.ts` | Reassembly and final frame | Rear module, ring, output signals |
+| Physical content screens | `CinematicWorld.ts` | Services and work inside the camera | Three.js planes with metal frames and UFirst imagery |
 
-## Image content
+## Content and fallback imagery
 
-The supplied and generated PNG/JPEG files remain content assets and screen surfaces. They are not treated as the camera, doors, or other major physical models.
+The source paths and current roles are recorded in `public/models/asset-manifest.json`. The existing `/public/assets/journey/` images are used for service/work surfaces. `/assets/camera/ufirst-camera-exterior-v2.png` remains the approved hero fallback when WebGL cannot run. The hero image is not mounted as a sprite in the active 3D world.
 
-## Performance targets
+## Materials and lighting
 
-- Device pixel ratio: max 1.5 desktop, max 1.1 mobile.
-- Shadows: one 1024px directional shadow map on desktop; disabled on mobile.
-- Mobile: fewer aperture blades and reduced service-camera scale.
-- Screens: loaded through `LoadingManager`, with the cinematic fallback photograph remaining available.
-- WebGL failure: the HTML copy and static hero image remain usable.
+- Body and mounts use `MeshPhysicalMaterial` with dark painted-metal/polymer values, clearcoat, and controlled roughness.
+- Rings, screws, and rails use higher-metalness materials with separate roughness values.
+- Optical elements use transmission, thickness, IOR, and restrained blue/teal emissive response.
+- Sensor, PCB, copper contacts, buttons, and red UFirst accents are separate material families.
+- Key, red accent, back, ambient, and lens-interior lights are authored in the same physical world.
+- Post-processing is intentionally omitted from the current pass so the camera remains legible and the content stays readable.
 
-## Future GLB upgrade path
+## Runtime performance
 
-If production modeling moves to Blender, the procedural camera, lens, door, and studio groups can be replaced behind the same scene update contract. Approved assets should be exported as GLB, normalized to one world unit per meter, assigned explicit pivot names, and documented with license, triangle, texture, LOD, and compression data before inclusion.
+- One persistent renderer and one scene are used for the full scroll journey.
+- DPR is capped at approximately 1.5 on high desktop and 1.1 on mobile/low tiers.
+- Low quality loads fewer service/work surfaces and keeps the story-critical geometry.
+- Textures are loaded through `LoadingManager`; renderer and textures are disposed on teardown.
+- No per-frame React state drives geometry; the scroll timeline updates Three.js objects directly.
+
+## Required production upgrade
+
+The procedural camera is a documented implementation model, not a final photorealistic production asset. A production camera GLB is still required at `public/models/ufirst-camera-production.glb` when the agency supplies or approves one. It must include the separated hierarchy, materials, pivots, LODs, and compression requirements in `docs/3D-ASSET-REQUIREMENTS.md`.
+
+The runtime scene contract is already isolated so the approved GLB can replace the procedural groups without changing the content model, admin dashboard, scroll timeline, or semantic fallback.

@@ -116,7 +116,8 @@ export default function HomeExperience({ content }: { content: SiteContent }) {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <main className="site-shell" data-experience="ufirst-photo-journey-v1" style={{ '--pattern-image': `url('${content.backgrounds.pattern.src}')` } as CSSProperties}>
+    <main className="site-shell" data-experience="ufirst-one-camera-journey-v2" style={{ '--pattern-image': `url('${content.backgrounds.pattern.src}')` } as CSSProperties}>
+      <a className="skip-link" href="#system">Skip the cinematic experience</a>
       <div className="cursor-glow" aria-hidden="true" />
       <header className="site-nav">
         <a className="brand" href="#top" onClick={closeMenu} aria-label="UFirst home"><span className="brand-glyph">U</span><span>FIRST</span></a>
