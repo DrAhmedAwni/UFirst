@@ -14,6 +14,16 @@ async function ensureStorage() {
 }
 
 function mergeContent(value: Partial<SiteContent>): SiteContent {
+  const system = { ...defaultContent.system, ...value.system };
+  // Upgrade only the shipped placeholder artwork; retain uploaded/custom images.
+  for (const field of ['dashboard', 'mobile', 'browser'] as const) {
+    if (system[field].src === `/assets/ufirst-3d-${field}.png`) system[field] = defaultContent.system[field];
+  }
+  const oldServiceImages = ['/assets/hero-camera.jpg', '/assets/agency-page.jpg', '/assets/work-laptop.jpg', '/assets/agency-page.jpg', '/assets/work-laptop.jpg'];
+  const services = (value.services?.length ? value.services : defaultContent.services).map((service) => {
+    const index = defaultContent.services.findIndex((item) => item.number === service.number);
+    return index >= 0 && service.image.src === oldServiceImages[index] ? { ...service, image: defaultContent.services[index].image } : service;
+  });
   return {
     ...defaultContent,
     ...value,
@@ -21,8 +31,8 @@ function mergeContent(value: Partial<SiteContent>): SiteContent {
     backgrounds: { ...defaultContent.backgrounds, ...value.backgrounds },
     hero: { ...defaultContent.hero, ...value.hero },
     about: { ...defaultContent.about, ...value.about },
-    system: { ...defaultContent.system, ...value.system },
-    services: value.services?.length ? value.services : defaultContent.services,
+    system,
+    services,
     industries: value.industries?.length ? value.industries : defaultContent.industries,
     process: value.process?.length ? value.process : defaultContent.process,
     projects: value.projects?.length ? value.projects : defaultContent.projects,
