@@ -27,6 +27,7 @@ type JourneyGroups = {
   shell: MeshList;
   lens: MeshList;
   aperture: MeshList;
+  doors: MeshList;
   shutter: MeshList;
   sensor: MeshList;
   processor: MeshList;
@@ -48,7 +49,7 @@ const JOURNEY_GROUP_NAMES = [
 ] as const;
 
 function emptyJourneyGroups(): JourneyGroups {
-  return { shell: [], lens: [], aperture: [], shutter: [], sensor: [], processor: [], memory: [], exit: [], serviceSurfaces: [], workSurfaces: [] };
+  return { shell: [], lens: [], aperture: [], doors: [], shutter: [], sensor: [], processor: [], memory: [], exit: [], serviceSurfaces: [], workSurfaces: [] };
 }
 
 function collectGroupMeshes(root: Object3D, groupNames: readonly string[]) {
@@ -304,6 +305,49 @@ function addExit(group: Group, materials: Material[], groups: JourneyGroups) {
   addBox(group, [0.55, 0.12, 0.12], [1.25, 0.8, -9.24], red, 'Output signal two', groups.exit);
 }
 
+function addDoors(group: Group, materials: Material[], groups: JourneyGroups) {
+  const doorBody = createMaterial(materials, 0x171d20, { roughness: 0.3, metalness: 0.82, clearcoat: 0.24 });
+  const doorEdge = createMaterial(materials, 0x738084, { roughness: 0.22, metalness: 0.92 });
+  const doorInset = createMaterial(materials, 0x080b0d, { roughness: 0.72, metalness: 0.12 });
+  const doorAccent = createMaterial(materials, 0xc30f1d, { roughness: 0.26, metalness: 0.54, emissive: 0x290205, emissiveIntensity: 0.42 });
+  const lightLeak = createMaterial(materials, 0xffc7a1, { roughness: 0.2, metalness: 0, emissive: 0xff6b36, emissiveIntensity: 1.8, transparent: true, opacity: 0 });
+
+  group.position.z = -3.72;
+  const leftPivot = new Group();
+  leftPivot.name = 'LeftDoorHingePivot';
+  leftPivot.position.set(-2.42, 0, 0);
+  group.add(leftPivot);
+  const rightPivot = new Group();
+  rightPivot.name = 'RightDoorHingePivot';
+  rightPivot.position.set(2.42, 0, 0);
+  group.add(rightPivot);
+
+  addRoundedBox(leftPivot, [2.36, 5.28, 0.3], [1.18, 0, 0], doorBody, 'LeftDoorPanel', groups.doors, 0.12);
+  addRoundedBox(rightPivot, [2.36, 5.28, 0.3], [-1.18, 0, 0], doorBody, 'RightDoorPanel', groups.doors, 0.12);
+  addRoundedBox(leftPivot, [1.88, 4.72, 0.08], [1.18, 0, -0.19], doorInset, 'LeftDoorInset', groups.doors, 0.08);
+  addRoundedBox(rightPivot, [1.88, 4.72, 0.08], [-1.18, 0, -0.19], doorInset, 'RightDoorInset', groups.doors, 0.08);
+  for (let index = 0; index < 3; index += 1) {
+    const x = 0.62 + index * 0.56;
+    addBox(leftPivot, [0.06, 4.62, 0.06], [x, 0, -0.27], doorEdge, `LeftDoorRib${String(index + 1).padStart(2, '0')}`, groups.doors);
+    addBox(rightPivot, [0.06, 4.62, 0.06], [-x, 0, -0.27], doorEdge, `RightDoorRib${String(index + 1).padStart(2, '0')}`, groups.doors);
+  }
+  addBox(leftPivot, [0.07, 4.74, 0.08], [2.24, 0, -0.31], doorAccent, 'LeftDoorSeal', groups.doors);
+  addBox(rightPivot, [0.07, 4.74, 0.08], [-2.24, 0, -0.31], doorAccent, 'RightDoorSeal', groups.doors);
+  addRoundedBox(group, [0.48, 5.82, 0.54], [-2.82, 0, 0], doorBody, 'LeftDoorFrame', groups.doors, 0.12);
+  addRoundedBox(group, [0.48, 5.82, 0.54], [2.82, 0, 0], doorBody, 'RightDoorFrame', groups.doors, 0.12);
+  addRoundedBox(group, [6.12, 0.5, 0.54], [0, 2.66, 0], doorBody, 'DoorHeader', groups.doors, 0.12);
+  addRoundedBox(group, [6.12, 0.34, 1.08], [0, -2.76, 0], doorEdge, 'DoorThreshold', groups.doors, 0.08);
+  addBox(group, [5.2, 0.08, 0.08], [0, 2.38, -0.3], doorAccent, 'DoorHeaderAccent', groups.doors);
+  addRoundedBox(group, [3.86, 4.62, 0.06], [0, 0, -0.38], lightLeak, 'DoorLightLeak', groups.doors, 0.06);
+  for (let index = 0; index < 4; index += 1) {
+    const y = -1.9 + index * 1.25;
+    addScrew(group, [-2.82, y, -0.34], doorEdge, `LeftDoorHinge${String(index + 1).padStart(2, '0')}`, groups.doors);
+    addScrew(group, [2.82, y, -0.34], doorEdge, `RightDoorHinge${String(index + 1).padStart(2, '0')}`, groups.doors);
+  }
+
+  return { leftPivot, rightPivot };
+}
+
 function addContentScreen(parent: Group, texture: Texture, position: [number, number, number], size: [number, number], name: string, material: MeshPhysicalMaterial, list: MeshList, materials: Material[], rotationY = 0) {
   const frame = addRoundedBox(parent, [size[0] + 0.18, size[1] + 0.18, 0.12], position, material, `${name} frame`, list, 0.04);
   frame.rotation.y = rotationY;
@@ -371,6 +415,11 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
   model.add(apertureGroup);
   addAperture(apertureGroup, materials, groups);
 
+  const doorGroup = new Group();
+  doorGroup.name = '08 Monumental doors / passage';
+  model.add(doorGroup);
+  const doorAssembly = addDoors(doorGroup, materials, groups);
+
   const shutterGroup = new Group();
   shutterGroup.name = '03 Shutter / production';
   model.add(shutterGroup);
@@ -417,6 +466,10 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
   innerLight.name = 'Lens interior fill';
   innerLight.position.set(-0.4, 0.6, -3.1);
   root.add(innerLight);
+  const doorLight = new PointLight(0xff8b5b, 0, 11, 2);
+  doorLight.name = 'Warm light beyond the doors';
+  doorLight.position.set(0, 0.3, -4.7);
+  root.add(doorLight);
 
   let elapsed = 0;
   const componentGroups: Array<{ meshes: MeshList; from: number; to: number }> = [
@@ -520,12 +573,20 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     });
 
     setOpacity(activeGroups.shell, MathUtils.clamp(MathUtils.lerp(0.02, 0.96, Math.max(exteriorBlend, returnBlend)), 0.02, 0.96));
+    const doorVisibility = smoothWindow(value, 0.18, 0.53, 0.05);
+    const doorOpen = MathUtils.smoothstep(value, 0.29, 0.46);
+    doorAssembly.leftPivot.rotation.y = -doorOpen * Math.PI * 0.42;
+    doorAssembly.rightPivot.rotation.y = doorOpen * Math.PI * 0.42;
+    doorAssembly.leftPivot.position.z = -doorOpen * 0.12;
+    doorAssembly.rightPivot.position.z = -doorOpen * 0.12;
+    setOpacity(groups.doors, doorVisibility);
     setOpacity(groups.serviceSurfaces, smoothWindow(value, 0.27, 0.5, 0.06));
     setOpacity(groups.workSurfaces, smoothWindow(value, 0.43, 0.78, 0.07) * (1 - MathUtils.smoothstep(value, 0.84, 0.94)));
     key.intensity = (mobile ? 130 : 190) + Math.sin(elapsed * 0.35) * 8;
     redLight.intensity = (mobile ? 120 : 180) + Math.cos(elapsed * 0.27) * 12;
     backLight.intensity = (mobile ? 100 : 150) + Math.sin(elapsed * 0.22) * 10 + exploded * 35;
     innerLight.intensity = (mobile ? 4 : 6) * (0.28 + (1 - exteriorBlend) * 0.72) + Math.sin(elapsed * 0.4) * 0.4;
+    doorLight.intensity = (mobile ? 46 : 72) * doorOpen * doorVisibility;
   };
 
   const dispose = () => {

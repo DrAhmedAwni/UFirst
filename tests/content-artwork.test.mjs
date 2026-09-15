@@ -27,3 +27,13 @@ test('custom uploaded artwork is never replaced', () => {
   assert.equal(merged.services[0].image.src, custom.services[0].image.src);
   assert.equal(merged.system.browser.src, custom.system.browser.src);
 });
+
+test('saved experience copy keeps its edits while receiving new journey chapters', () => {
+  const saved = structuredClone(defaultContent);
+  saved.experience.moments = saved.experience.moments.slice(0, 8);
+  saved.experience.moments[1].title = 'Custom lens chapter';
+  const merged = mergeContent(saved);
+  assert.equal(merged.experience.moments.length, defaultContent.experience.moments.length);
+  assert.equal(merged.experience.moments[1].title, 'Custom lens chapter');
+  assert.equal(merged.experience.moments.find((moment) => moment.number === '04')?.scene, 'doors');
+});

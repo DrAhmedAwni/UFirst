@@ -199,7 +199,40 @@ Services should be represented by physical or spatial objects with a clear role:
 
 Procedural geometry is acceptable only when it has a deliberate physical identity and is not a random primitive collection. Existing UFirst artwork may be used as a surface or fallback until the physical service objects are produced.
 
-## 7. P1 — Work and content surfaces
+## 7. P0 — Monumental threshold doors
+
+### NAME
+
+UFirst threshold door architecture
+
+### PURPOSE
+
+Create the physical transition between the optical camera interior and the UFirst agency world. The doors are a second memorable camera journey beat: the visitor approaches, sees a controlled warm light leak, watches both panels swing from real hinge pivots, and travels through the opening.
+
+### FORMAT
+
+Original runtime geometry is acceptable for the first production pass because the doors are a structural environment object, not a branded product asset. A later authored GLB may replace it without changing the `LeftDoorHingePivot` / `RightDoorHingePivot` scene contract.
+
+### GEOMETRY / MATERIALS
+
+- paired dark painted-metal panels with recessed rubber inset and machined vertical ribs;
+- independent left/right panels with edge seals, frame columns, header, threshold, hinge fasteners, and depth behind the opening;
+- warm emissive light leak and localized point light beyond the threshold;
+- no logos, invented copy, or generic neon-grid decoration.
+
+### PIVOTS / ANIMATION
+
+- `LeftDoorHingePivot` at the left outer edge;
+- `RightDoorHingePivot` at the right outer edge;
+- closed state at the lens-entry handoff;
+- panels open in opposite directions from approximately 0° to ±75° across the `door-open` range;
+- passage completes only after the center is clear; reverse scroll closes the doors naturally.
+
+### BUDGET
+
+Keep the runtime door assembly below approximately 15k visible triangles on desktop and use the same geometry on mobile with capped pixel ratio and reduced lighting.
+
+## 8. P1 — Work and content surfaces
 
 ### PURPOSE
 
@@ -218,7 +251,7 @@ Real 3D frames, displays, paper, lightboxes, or projection surfaces. Project ima
 - no invented metrics, clients, or outcomes;
 - admin content model can replace approved project media without code changes.
 
-## 8. P2 — Existing repository assets and their role
+## 9. P2 — Existing repository assets and their role
 
 Current image assets include hero camera renders, camera exploded/exterior references, service artwork, process artwork, brand marks, and work/laptop imagery. Their role must be explicit:
 
@@ -231,7 +264,7 @@ Current image assets include hero camera renders, camera exploded/exterior refer
 
 Do not label any of these files as a real 3D camera in the admin dashboard.
 
-## 9. Asset manifest requirements
+## 10. Asset manifest requirements
 
 Create a machine-readable manifest for production assets with:
 
@@ -256,7 +289,7 @@ status
 
 `status` should support `required`, `in-progress`, `approved`, `temporary`, and `retired`.
 
-## 10. Acceptance tests for the camera asset
+## 11. Acceptance tests for the camera asset
 
 Before wiring the full journey, verify:
 
@@ -272,7 +305,7 @@ Before wiring the full journey, verify:
 
 The current generated assets pass the structural portion of this gate: `public/models/ufirst-camera-production.glb` is 81,288 triangles, `public/models/ufirst-camera-mobile.glb` is 32,364 triangles, and `public/models/ufirst-camera-distant.glb` is 23,288 triangles. All three expose the required named components and pivots, load through `GLTFLoader` in the local browser, and contain no external texture dependency. Photoreal surface validation and agency visual approval remain open.
 
-## 11. Temporary asset policy
+## 12. Temporary asset policy
 
 If a required production asset is unavailable during implementation, use a clearly documented temporary asset only to keep the scene testable. The implementation must record:
 

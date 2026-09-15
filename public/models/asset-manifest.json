@@ -72,6 +72,21 @@
       "mobileReady": false
     },
     {
+      "id": "monumental-doors-runtime-v1",
+      "name": "UFirst threshold door architecture",
+      "kind": "model",
+      "path": "runtime://CinematicWorld/08 Monumental doors",
+      "source": "Original procedural Three.js geometry in app/components/cinematic/CinematicWorld.ts",
+      "license": "UFirst project original",
+      "materials": ["painted dark metal", "machined edge metal", "rubber inset", "UFirst red seal", "warm emissive light leak"],
+      "pivots": ["LeftDoorHingePivot", "RightDoorHingePivot"],
+      "timelineRanges": ["lens-entry", "door-approach", "door-open", "passage"],
+      "status": "in-progress",
+      "components": ["LeftDoorPanel", "RightDoorPanel", "LeftDoorFrame", "RightDoorFrame", "DoorHeader", "DoorThreshold", "DoorLightLeak", "LeftDoorHinge", "RightDoorHinge"],
+      "desktopReady": true,
+      "mobileReady": true
+    },
+    {
       "id": "service-surfaces",
       "name": "UFirst service imagery",
       "kind": "texture",

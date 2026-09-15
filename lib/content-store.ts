@@ -53,10 +53,16 @@ function mergeContent(value: Partial<SiteContent>): SiteContent {
   if (hero.background.src === '/assets/hero-camera.jpg') hero.background = defaultContent.hero.background;
   const about = { ...defaultContent.about, ...value.about };
   if (about.image.src === '/assets/agency-page.jpg') about.image = defaultContent.about.image;
+  const savedMoments = value.experience?.moments ?? [];
+  const defaultMomentNumbers = new Set(defaultContent.experience.moments.map((moment) => moment.number));
+  const mergedMoments = [
+    ...defaultContent.experience.moments.map((moment) => ({ ...moment, ...savedMoments.find((saved) => saved.number === moment.number) })),
+    ...savedMoments.filter((moment) => !defaultMomentNumbers.has(moment.number)),
+  ];
   const experience = {
     ...defaultContent.experience,
     ...value.experience,
-    moments: value.experience?.moments?.length ? value.experience.moments : defaultContent.experience.moments,
+    moments: mergedMoments,
   };
   return {
     ...defaultContent,

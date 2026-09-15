@@ -12,6 +12,7 @@ The current experience loads original UFirst production-format GLBs for the inte
 | Camera body shell | `public/models/ufirst-camera-production.glb` / `ufirst-camera-mobile.glb` | Exterior reveal, silhouette, reassembly | Original beveled body plates, body shell pivot, PBR materials |
 | Lens housing and barrel | `public/models/ufirst-camera-production.glb` | Approach and lens-entry scale | Separated mount, barrel, focus ring, three glass elements |
 | Aperture assembly | `public/models/ufirst-camera-production.glb` | Aperture passage and focus metaphor | Eight separated blades, iris opening, timing ring |
+| Monumental threshold doors | `CinematicWorld.ts` (`08 Monumental doors / passage`) | Physical transition from lens interior into the UFirst world | Paired panels, frame, threshold, light leak, real hinge pivots |
 | Shutter assembly | `public/models/ufirst-camera-production.glb` | Production/execution chapter | Rails, curtains, timing ring, fasteners |
 | Sensor assembly | `public/models/ufirst-camera-production.glb` | Insight/work chapter | Frame, sensor plate, contact row, pixel detail |
 | Processor board | `public/models/ufirst-camera-production.glb` | Creative/process chapter | PCB, chips, traces, capacitors, signal ring |

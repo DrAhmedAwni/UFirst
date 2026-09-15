@@ -5,6 +5,7 @@ import './components/scroll-world.css';
 export const metadata: Metadata = {
   title: 'UFirst Agency — Make your next bold move',
   description: 'UFirst is a Cairo-based marketing and media production agency helping ambitious brands find their voice, tell better stories, and create growth that can be felt.',
+  icons: { icon: '/favicon.svg', shortcut: '/favicon.svg' },
   openGraph: {
     title: 'UFirst Agency — Make your next bold move',
     description: 'Strategy, story, and production for brands ready to move.',

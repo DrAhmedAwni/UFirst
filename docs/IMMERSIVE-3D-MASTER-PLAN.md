@@ -136,33 +136,69 @@ The camera moves toward the front element. Reflections, glass thickness, focus r
 
 The front lens fills the viewport. The transition uses glass/refraction, aperture movement, controlled exposure, or an occluding lens element to enter the camera. Avoid an unmotivated black flash or blurry particle tunnel.
 
-### Scene 04 — Exploded mechanism
+### Scene 04 — Reveal the threshold
+
+After the optical passage, a monumental two-panel threshold appears in the distance. It is a real depth-built door assembly with frame, hinge fasteners, threshold, and a restrained warm light leak behind it.
+
+### Scene 05 — Approach the doors
+
+The camera tracks toward the closed doors while keeping the opening centered. The surrounding camera parts remain spatially present so the visitor understands that this is a passage inside one continuous world.
+
+### Scene 06 — Open the next frame
+
+The left and right panels rotate from their documented hinge pivots. The light beyond the threshold strengthens as the center clears. The open motion is driven by the same reversible scroll playhead.
+
+### Scene 07 — Pass through
+
+The camera travels through the doorway into the UFirst world. This transition is physical camera travel through a real opening; the doors are allowed to cross the foreground and occlude the next scene naturally.
+
+### Scene 08 — Exploded mechanism / the UFirst system
 
 Inside the camera, separated components hold clear spatial relationships. Component labels appear only when the camera reaches the relevant area. The exploded state has readable staging, directional light, and enough contrast to identify each part.
 
-### Scene 05 — The UFirst system
+### Scene 09 — The UFirst system and services
 
 The internal camera system becomes a metaphor for integrated agency work. Strategy, creative, production, digital, and growth are represented by real scene objects and approved imagery. The visitor should understand that the parts are distinct but designed to work as one system.
 
-### Scene 06 — Services in depth
+### Scene 10 — Services in depth
 
 Each approved UFirst service receives a spatial identity and a short explanation. Services should be encountered as the camera travels through the mechanism, not as four identical cards. A direct navigation shortcut can move the timeline to a service range.
 
-### Scene 07 — Work / proof
+### Scene 11 — Work / proof
 
 Selected work appears as physical surfaces, displays, or projected scenes within the environment. Project imagery comes from the repository or later approved uploads. Titles and categories stay readable. An accessible project index remains available outside the cinematic path.
 
-### Scene 08 — Process / motion
+### Scene 12 — Process / motion
 
 The camera travels through a sequence of production states: brief, direction, making, launch, and optimisation. The process story is expressed by set changes, light, and objects with deliberate purpose. The supplied process atlas can be used only as a temporary content surface until approved 3D objects or scene assets exist.
 
-### Scene 09 — Reassembly
+### Scene 13 — Reassembly
 
 The internal components return in a controlled order. Sensor, shutter, processor, lens groups, and body shell converge. Motion has weight and avoids snapping or intersecting geometry. The completed camera becomes the visual proof of an integrated UFirst system.
 
-### Scene 10 — Final frame / contact
+### Scene 14 — Final frame / contact
 
 The camera rotates toward the visitor and moves back into a composed studio shot. The lens illuminates or catches a final reflection as the CTA appears. The contact action must be short, clear, keyboard accessible, and available through direct navigation without replaying the full journey.
+
+### Scene table
+
+| Scene | Purpose | 3D object | Camera position / movement | Object animation | Text / interaction | Transition + performance |
+| --- | --- | --- | --- | --- | --- | --- |
+| 00 Load | Establish anticipation | UFirst mark, studio atmosphere | Fixed opening frame | Loader resolves into light | Accessible skip link; loader status | No blank frame; preload camera tier |
+| 01 Reveal | Introduce the hero camera | Original UFirst camera GLB | Three-quarter dolly/orbit | Shell opacity and breathing light | “Make your next bold move” | Dark studio; capped DPR |
+| 02 Lens approach | Make attention physical | Lens housing and glass | Macro push toward front element | Focus ring and glass highlights | Lens caption; pointer micro-orbit | Lens fills frame without a fade |
+| 03 Enter lens | Cross the optical boundary | Glass, aperture blades | Fly through lens and aperture | Aperture opens; depth layers separate | “Enter the lens” | Aperture/light carries the cut |
+| 04 Threshold reveal | Introduce the next world | Door frame and warm light leak | Pull target toward distant doors | Door assembly fades in | “Open the next frame” | Real depth, no card swap |
+| 05 Door approach | Build tension | Paired door panels | Track forward on centerline | Panels remain closed; light grows | Door chapter nav | Preserve occlusion and negative space |
+| 06 Open | Create the signature passage | Hinge pivots, panels, threshold | Hold the opening centered | Panels swing ±75° | Scroll is the playhead | No one-way trigger; reverse-safe |
+| 07 Passage | Enter UFirst world | Door opening and inner light | Camera travels through | Door light peaks then recedes | “Cross the threshold” | Low draw-call structural geometry |
+| 08 Explode | Reveal integrated mechanism | Lens, shutter, sensor, board | Controlled interior track | Parts separate along authored offsets | Component caption | Use GLB groups, not sprites |
+| 09 System | Explain the offer | Internal frame and content surfaces | Move through depth | Surfaces light in range | Services shortcut | Range-load content surfaces |
+| 10 Services | Give each capability a role | Real frames/displays + service imagery | Slow lateral tracking | Service screens stage sequentially | Editable service captions | Low/medium tiers load fewer surfaces |
+| 11 Work | Show approved proof | Physical work displays | Pass display-to-display | Project surfaces advance in depth | Accessible project index | Keep metadata in HTML |
+| 12 Process | Show how work moves | Board, memory, production surfaces | Track along internal axis | Signals and surfaces carry forward | Process manifesto | Avoid decorative particles |
+| 13 Reassembly | Deliver narrative closure | All camera components | Pull back toward complete camera | Components converge in reverse order | Final-frame caption | Reverse timeline is deterministic |
+| 14 Contact | Convert attention to action | Complete camera, viewfinder | Orbit/pull back to CTA | Lens catches final reflection | Contact CTA and form | Direct anchor bypasses replay |
 
 ## 6. Camera choreography
 
@@ -267,6 +303,6 @@ The rebuild is complete when a visitor can understand UFirst’s offer and reach
 - Adaptive performance: `quality-tiers.ts`, capped renderer pixel ratio, reduced surface loading on low tier, and direct Three.js updates outside React state.
 - Content management: `app/admin/AdminEditor.tsx` edits UFirst copy, chapter captions, backgrounds, services, project imagery, and scene surfaces. It also reports loaded image dimensions and recommended replacement sizes.
 - Failure handling: static hero fallback, semantic content sections, loader progress from `LoadingManager`, and reduced-motion static framing.
-- Validation completed: lint, production build, five unit/asset tests, GLB node/triangle inspection, local browser asset-load check, public browser smoke checks, desktop/mobile checks, editor route check, and clean reduced-motion check.
+- Validation completed: lint, production build, eight unit/asset tests, GLB node/triangle inspection, local browser asset-load and door-passage checks, public browser smoke checks, desktop/mobile checks, editor route check, and clean reduced-motion check.
 
 The implementation is not marked production-final until the generated camera receives its final photoreal surface texture set, agency approval, and a production deployment validation using the three quality tiers.

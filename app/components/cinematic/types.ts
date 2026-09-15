@@ -4,6 +4,7 @@ export type CinematicSceneName =
   | 'reveal'
   | 'system'
   | 'about'
+  | 'doors'
   | 'services'
   | 'work'
   | 'process'
