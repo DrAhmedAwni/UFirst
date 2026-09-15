@@ -30,6 +30,8 @@ export type CinematicSample = {
 
 export type CinematicAssetUrls = {
   hero: string;
+  cameraModel: string;
+  cameraModelMobile: string;
   cameraExterior: string;
   cameraExploded: string;
   about: string;

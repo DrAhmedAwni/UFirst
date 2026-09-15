@@ -16,6 +16,7 @@ import {
   TorusGeometry,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { Material, MeshPhysicalMaterialParameters, Object3D } from 'three';
 import type { CinematicAssetUrls, CinematicWorld } from './types';
 import type { CinematicQuality } from './quality-tiers';
@@ -34,6 +35,34 @@ type JourneyGroups = {
   serviceSurfaces: MeshList;
   workSurfaces: MeshList;
 };
+
+const JOURNEY_GROUP_NAMES = [
+  '00_Camera_exterior',
+  '01_Lens__attention',
+  '02_Aperture__focus',
+  '03_Shutter__production',
+  '04_Sensor__insight',
+  '05_Processor__creative',
+  '06_Memory__digital',
+  '07_Viewfinder__results',
+] as const;
+
+function emptyJourneyGroups(): JourneyGroups {
+  return { shell: [], lens: [], aperture: [], shutter: [], sensor: [], processor: [], memory: [], exit: [], serviceSurfaces: [], workSurfaces: [] };
+}
+
+function collectGroupMeshes(root: Object3D, groupNames: readonly string[]) {
+  const grouped = emptyJourneyGroups();
+  const keys: Array<keyof JourneyGroups> = ['shell', 'lens', 'aperture', 'shutter', 'sensor', 'processor', 'memory', 'exit'];
+  groupNames.forEach((name, index) => {
+    const group = root.getObjectByName(name);
+    if (!group) return;
+    group.traverse((object) => {
+      if (object instanceof Mesh) grouped[keys[index]].push(object);
+    });
+  });
+  return grouped;
+}
 
 function createMaterial(materials: Material[], color: number, options: MeshPhysicalMaterialParameters = {}) {
   const material = new MeshPhysicalMaterial({
@@ -122,10 +151,13 @@ function smoothWindow(progress: number, from: number, to: number, feather = 0.08
 
 function setOpacity(meshes: MeshList, opacity: number) {
   meshes.forEach((mesh) => {
-    const material = mesh.material as MeshPhysicalMaterial;
-    material.opacity = opacity;
-    material.depthWrite = opacity > 0.84;
-    material.needsUpdate = true;
+    const meshMaterials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    meshMaterials.forEach((material) => {
+      material.transparent = true;
+      material.opacity = opacity;
+      material.depthWrite = opacity > 0.84;
+      material.needsUpdate = true;
+    });
   });
 }
 
@@ -299,10 +331,13 @@ function addContentScreen(parent: Group, texture: Texture, position: [number, nu
 export function createCinematicWorld(manager: LoadingManager, assets: CinematicAssetUrls, { mobile, quality }: { mobile: boolean; quality: CinematicQuality }): CinematicWorld {
   const root = new Group();
   root.name = 'UFirst true camera interior journey';
+  const setAssetStatus = (status: 'production' | 'procedural-fallback') => {
+    if (typeof document !== 'undefined') document.documentElement.dataset.cinematicModel = status;
+  };
   const materials: Material[] = [];
-  const groups: JourneyGroups = { shell: [], lens: [], aperture: [], shutter: [], sensor: [], processor: [], memory: [], exit: [], serviceSurfaces: [], workSurfaces: [] };
+  const groups: JourneyGroups = emptyJourneyGroups();
   const model = new Group();
-  model.name = 'Original UFirst cinema camera';
+  model.name = 'UFirst camera runtime container';
   root.add(model);
   const textureLoader = new TextureLoader(manager);
   const surfaceUrls = quality === 'low' ? [...assets.services.slice(0, 3), assets.projects[0], assets.contact] : [...assets.services, ...assets.projects, assets.contact];
@@ -403,6 +438,59 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     { group: exitGroup, x: 0.1, y: -0.05, z: -0.06, rotation: -0.008 },
     { group: surfaceGroup, x: 0, y: 0, z: 0.08, rotation: 0 },
   ];
+  let activeGroups = groups;
+  let activeComponentGroups = componentGroups;
+  let activeSpatialGroups = spatialGroups;
+  const productionLoader = new GLTFLoader(manager);
+  const modelUrl = mobile || quality === 'low' ? assets.cameraModelMobile : assets.cameraModel;
+  productionLoader.load(modelUrl, (gltf) => {
+    const productionModel = gltf.scene;
+    const productionGroups = collectGroupMeshes(productionModel, JOURNEY_GROUP_NAMES);
+    const hasCompleteJourney = JOURNEY_GROUP_NAMES.every((name) => productionModel.getObjectByName(name));
+    if (!hasCompleteJourney || JOURNEY_GROUP_NAMES.some((_, index) => productionGroups[['shell', 'lens', 'aperture', 'shutter', 'sensor', 'processor', 'memory', 'exit'][index] as keyof JourneyGroups].length === 0)) {
+      setAssetStatus('procedural-fallback');
+      return;
+    }
+
+    productionModel.name = 'UFirst production camera GLB';
+    productionModel.traverse((object) => {
+      if (!(object instanceof Mesh)) return;
+      object.frustumCulled = false;
+      const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
+      meshMaterials.forEach((material) => {
+        material.transparent = true;
+        material.depthWrite = true;
+        materials.push(material);
+      });
+    });
+
+    [lensGroup, apertureGroup, shutterGroup, sensorGroup, processorGroup, memoryGroup, shellGroup, exitGroup].forEach((group) => model.remove(group));
+    model.add(productionModel);
+    activeGroups = productionGroups;
+    activeComponentGroups = [
+      { meshes: productionGroups.lens, from: 0.02, to: 0.18 },
+      { meshes: productionGroups.aperture, from: 0.13, to: 0.3 },
+      { meshes: productionGroups.shutter, from: 0.25, to: 0.43 },
+      { meshes: productionGroups.sensor, from: 0.37, to: 0.58 },
+      { meshes: productionGroups.processor, from: 0.52, to: 0.74 },
+      { meshes: productionGroups.memory, from: 0.68, to: 0.88 },
+      { meshes: productionGroups.exit, from: 0.82, to: 1 },
+    ];
+    activeSpatialGroups = [
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[1])!, x: 0.18, y: 0.04, z: 0.2, rotation: -0.012 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[2])!, x: -0.2, y: 0.1, z: 0.1, rotation: 0.018 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[3])!, x: 0.14, y: -0.12, z: 0, rotation: -0.01 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[4])!, x: -0.15, y: 0.08, z: -0.08, rotation: 0.008 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[5])!, x: 0.2, y: -0.08, z: -0.04, rotation: -0.014 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[6])!, x: -0.18, y: 0.12, z: 0.04, rotation: 0.012 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[7])!, x: 0.1, y: -0.05, z: -0.06, rotation: -0.008 },
+      { group: surfaceGroup, x: 0, y: 0, z: 0.08, rotation: 0 },
+    ];
+    setAssetStatus('production');
+  }, undefined, () => {
+    // The procedural model remains visible if the production asset cannot load.
+    setAssetStatus('procedural-fallback');
+  });
   const pointer = { x: 0, y: 0 };
 
   const update = (progress: number, delta: number) => {
@@ -417,21 +505,21 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     model.rotation.y += pointer.x * 0.026;
     model.rotation.x += pointer.y * 0.018;
 
-    spatialGroups.forEach(({ group, x, y, z, rotation }) => {
+    activeSpatialGroups.forEach(({ group, x, y, z, rotation }) => {
       group.position.x = x * exploded;
       group.position.y = y * exploded;
       group.position.z = z * exploded;
       group.rotation.z = rotation * exploded;
     });
 
-    componentGroups.forEach(({ meshes, from, to }, index) => {
+    activeComponentGroups.forEach(({ meshes, from, to }, index) => {
       const focus = smoothWindow(value, from, to, 0.1);
       const exteriorLensFocus = index === 0 ? 1 - MathUtils.smoothstep(value, 0.12, 0.24) : 0;
       const visibility = Math.max(focus, exteriorLensFocus, value > 0.22 && value < 0.92 ? 0.18 : 0);
       setOpacity(meshes, MathUtils.lerp(0.12, 1, visibility) * geometryBlend);
     });
 
-    setOpacity(groups.shell, MathUtils.clamp(MathUtils.lerp(0.02, 0.96, Math.max(exteriorBlend, returnBlend)), 0.02, 0.96));
+    setOpacity(activeGroups.shell, MathUtils.clamp(MathUtils.lerp(0.02, 0.96, Math.max(exteriorBlend, returnBlend)), 0.02, 0.96));
     setOpacity(groups.serviceSurfaces, smoothWindow(value, 0.27, 0.5, 0.06));
     setOpacity(groups.workSurfaces, smoothWindow(value, 0.43, 0.78, 0.07) * (1 - MathUtils.smoothstep(value, 0.84, 0.94)));
     key.intensity = (mobile ? 130 : 190) + Math.sin(elapsed * 0.35) * 8;
@@ -445,6 +533,7 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
       if (object instanceof Mesh) object.geometry.dispose();
     });
     materials.forEach((material) => material.dispose());
+    if (typeof document !== 'undefined') delete document.documentElement.dataset.cinematicModel;
   };
 
   return {

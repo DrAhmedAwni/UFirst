@@ -16,7 +16,7 @@ Preferred delivery format: GLB with embedded or explicitly documented textures. 
 
 | Priority | Asset | Needed for | Current status |
 | --- | --- | --- | --- |
-| P0 | Separated realistic camera model | Reveal, lens entry, exploded journey, reassembly | Required; no GLB/GLTF exists in repository |
+| P0 | Separated realistic camera model | Reveal, lens entry, exploded journey, reassembly | Original production-format GLB generated; photoreal texture/LOD polish pending |
 | P0 | Camera material/texture set | Photorealistic product lighting | Required with model |
 | P0 | Lens optical assembly | Entry transition and internal journey | Required as separated meshes |
 | P0 | Internal camera mechanism | Storytelling through components | Required as separated meshes or approved simplified mechanism |
@@ -269,6 +269,8 @@ Before wiring the full journey, verify:
 - model loads without a missing-texture or shader error;
 - the model can be framed at desktop, tablet, and mobile aspect ratios;
 - the asset has no unapproved logos, watermarks, fake client marks, or invented text.
+
+The current generated assets pass the structural portion of this gate: `public/models/ufirst-camera-production.glb` is 81,288 triangles and `public/models/ufirst-camera-mobile.glb` is 32,364 triangles; both expose the required named components and pivots, load through `GLTFLoader` in the local browser, and contain no external texture dependency. Photoreal surface validation, final LOD validation, and agency visual approval remain open.
 
 ## 11. Temporary asset policy
 
