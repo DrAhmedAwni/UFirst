@@ -69,7 +69,7 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, cinematicPixelRatio(quality, mobile)));
     renderer.outputColorSpace = SRGBColorSpace;
     renderer.toneMapping = ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.18;
+    renderer.toneMappingExposure = 1.32;
     renderer.setClearColor(0x050708, 0);
 
     const scene = new Scene();

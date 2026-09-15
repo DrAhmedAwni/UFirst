@@ -109,8 +109,9 @@ const glassDark = material(0x111b20, { metalness: 0.24, roughness: 0.12, transmi
 const apertureMetal = material(0x4f5a5e, { metalness: 0.95, roughness: 0.22 });
 const board = material(0x102d28, { metalness: 0.38, roughness: 0.5 });
 const copper = material(0xb87537, { metalness: 0.88, roughness: 0.2 });
-const sensorMaterial = material(0x173b4d, { metalness: 0.32, roughness: 0.18, emissive: 0x082638, emissiveIntensity: 0.32 });
-const white = material(0xd5dcda, { metalness: 0.28, roughness: 0.44 });
+const sensorMaterial = material(0x126078, { metalness: 0.12, roughness: 0.22, emissive: 0x063c52, emissiveIntensity: 0.42 });
+const sensorGlass = material(0x1f7587, { metalness: 0.08, roughness: 0.2, emissive: 0x0a3440, emissiveIntensity: 0.34 });
+const white = material(0x9fb8bc, { metalness: 0.34, roughness: 0.34, emissive: 0x17282b, emissiveIntensity: 0.06 });
 
 function buildExterior(group) {
   const bodyShell = pivot(group, 'BodyShellPivot', [0, 0, -5.7]);
@@ -128,7 +129,10 @@ function buildExterior(group) {
   rounded(group, [5.15, 3.5, 0.24], [0, 0, -3.18], bodyEdge, 'FrontChassisPlate', 0.08);
   rounded(group, [5.15, 3.5, 0.24], [0, 0, -8.34], body, 'RearChassisPlate', 0.08);
   rounded(group, [4.7, 3.05, 0.22], [0, 0, -8.5], darkRubber, 'RearGripPanel', 0.18);
-  rounded(group, [5.9, 0.38, 1.18], [0, 2.46, -5.72], body, 'TopCarryHandle', 0.13);
+  rounded(group, [2.9, 0.3, 0.72], [0, 2.48, -5.72], body, 'TopCarryHandle', 0.13);
+  rounded(group, [1.45, 0.76, 1.18], [0, 2.16, -5.72], blackMetal, 'ViewfinderPrism', 0.18);
+  rounded(group, [0.72, 0.34, 0.12], [0, 2.3, -5.08], glassDark, 'ViewfinderWindow', 0.05);
+  rounded(group, [0.78, 0.14, 0.36], [0, 2.84, -5.72], bodyEdge, 'HotShoe', 0.04);
   rounded(group, [5.2, 0.14, 0.16], [0, 2.29, -5.72], red, 'UFirstAccentRail', 0.04);
   rounded(group, [0.38, 2.9, 1.55], [2.76, 0, -5.78], darkRubber, 'Grip', 0.18);
   rounded(group, [0.3, 2.38, 0.2], [2.98, 0, -5.78], red, 'GripAccent', 0.05);
@@ -201,31 +205,41 @@ function buildShutter(group) {
 
 function buildSensor(group) {
   const sensor = pivot(group, 'SensorPivot', [0, 0, -4.08]);
-  rounded(sensor, [3.88, 2.96, 0.18], [0, 0, 0], blackMetal, 'InternalFrame', 0.1);
-  rounded(sensor, [3.12, 2.18, 0.15], [0, 0, -0.12], sensorMaterial, 'Sensor', 0.04);
-  torus(sensor, 1.56, 0.065, [0, 0, 0.03], red, 'SensorReadoutRing');
+  rounded(sensor, [4.02, 3.02, 0.22], [0, 0, -0.28], blackMetal, 'InternalFrame', 0.12);
+  rounded(sensor, [3.42, 2.48, 0.16], [0, 0, -0.18], bodyEdge, 'SensorMountPlate', 0.08);
+  rounded(sensor, [3.08, 2.12, 0.12], [0, 0, -0.1], sensorMaterial, 'Sensor', 0.05);
+  rounded(sensor, [2.92, 1.98, 0.05], [0, 0, 0.01], sensorGlass, 'SensorGlass', 0.04);
+  torus(sensor, 1.12, 0.04, [0, 0, 0.04], red, 'SensorReadoutRing');
   const sensorRows = distant ? 3 : mobile ? 5 : 7;
   const sensorColumns = distant ? 5 : mobile ? 8 : 10;
   for (let y = 0; y < sensorRows; y += 1) {
     for (let x = 0; x < sensorColumns; x += 1) {
-      box(sensor, [0.075, 0.075, 0.025], [-0.84 + x * 0.24, -0.48 + y * 0.24, 0.04], white, `SensorPixel${String(y * sensorColumns + x + 1).padStart(3, '0')}`);
+      box(sensor, [0.06, 0.06, 0.028], [-1.08 + x * 0.24, -0.72 + y * 0.24, 0.08], white, `SensorMicroLens${String(y * sensorColumns + x + 1).padStart(3, '0')}`);
     }
   }
-  for (let index = 0; index < 12; index += 1) box(sensor, [0.08, 0.32, 0.04], [-1.34 + index * 0.24, -1.28, 0.04], copper, `SensorContact${String(index + 1).padStart(2, '0')}`);
+  for (let index = 0; index < 12; index += 1) box(sensor, [0.08, 0.28, 0.05], [-1.34 + index * 0.24, -1.34, 0.06], copper, `SensorContact${String(index + 1).padStart(2, '0')}`);
+  for (const [x, y] of [[-1.72, -1.16], [1.72, -1.16], [-1.72, 1.16], [1.72, 1.16]]) screw(sensor, [x, y, 0.02], silverMetal, `SensorMountScrew${x}${y}`);
+  box(sensor, [0.42, 1.42, 0.06], [2.04, 0.02, 0.08], copper, 'SensorFlexCable', [0, 0, -0.08]);
+  rounded(sensor, [0.58, 0.5, 0.12], [2.05, 0.02, 0.16], blackMetal, 'SensorCableSocket', 0.04);
 }
 
 function buildProcessor(group) {
   const processor = pivot(group, 'ProcessorPivot', [0, 0, -5.55]);
-  rounded(processor, [4.28, 2.92, 0.16], [0, 0, 0], board, 'MainBoard', 0.08);
+  rounded(processor, [4.28, 2.92, 0.16], [0, 0, 0], blackMetal, 'BoardCarrier', 0.08);
+  rounded(processor, [3.9, 2.56, 0.18], [0, 0, 0.08], board, 'MainBoard', 0.08);
   rounded(processor, [1.26, 0.96, 0.22], [-0.72, 0.38, 0.16], blackMetal, 'Processor', 0.08);
   rounded(processor, [0.82, 0.68, 0.18], [0.92, -0.48, 0.16], blackMetal, 'SignalProcessor', 0.06);
   rounded(processor, [0.56, 0.46, 0.15], [1.38, 0.55, 0.15], silverMetal, 'ControlChip', 0.04);
   for (let index = 0; index < 8; index += 1) {
-    box(processor, [0.08, 2.02, 0.04], [-1.62 + index * 0.46, 0, 0.09], copper, `BoardTrace${String(index + 1).padStart(2, '0')}`);
+    box(processor, [1.15, 0.045, 0.035], [-1.12 + (index % 4) * 0.72, -0.76 + Math.floor(index / 4) * 1.5, 0.2], copper, `BoardTrace${String(index + 1).padStart(2, '0')}`);
   }
   for (let index = 0; index < 6; index += 1) {
     verticalCylinder(processor, 0.09, 0.16, [-1.6 + index * 0.55, 1.0, 0.14], silverMetal, `BoardCapacitor${String(index + 1).padStart(2, '0')}`, 16);
   }
+  for (let index = 0; index < 5; index += 1) {
+    box(processor, [0.045, 1.1, 0.035], [-1.46 + index * 0.7, 0, 0.2], copper, `BoardTraceVertical${String(index + 1).padStart(2, '0')}`);
+  }
+  rounded(processor, [0.94, 0.12, 0.82], [-0.72, 0.38, 0.32], silverMetal, 'ProcessorHeatSpreader', 0.04);
   torus(processor, 0.44, 0.055, [-0.72, 0.38, 0.28], red, 'CreativeSignalRing');
 }
 
@@ -233,7 +247,13 @@ function buildMemory(group) {
   const memory = pivot(group, 'MemoryPivot', [0, 0, -6.95]);
   rounded(memory, [3.62, 2.55, 0.32], [0, 0, 0], blackMetal, 'MemoryBay', 0.12);
   rounded(memory, [2.54, 1.52, 0.2], [0, 0, 0.2], board, 'MemoryCard', 0.08);
+  rounded(memory, [2.06, 0.08, 0.04], [0, 0.54, 0.34], red, 'MemoryCardLabel', 0.02);
   for (let index = 0; index < 10; index += 1) box(memory, [0.13, 0.55, 0.04], [-0.78 + index * 0.175, -0.96, 0.35], copper, `MemoryContact${String(index + 1).padStart(2, '0')}`);
+  for (let index = 0; index < 4; index += 1) rounded(memory, [0.38, 0.28, 0.08], [-0.72 + (index % 2) * 0.92, -0.08 + Math.floor(index / 2) * 0.46, 0.34], blackMetal, `MemoryChip${String(index + 1).padStart(2, '0')}`, 0.03);
+  box(memory, [0.06, 1.32, 0.05], [-1.28, 0, 0.34], silverMetal, 'MemoryCardRailLeft');
+  box(memory, [0.06, 1.32, 0.05], [1.28, 0, 0.34], silverMetal, 'MemoryCardRailRight');
+  screw(memory, [-1.55, 0.9, 0.22], silverMetal, 'MemoryBayScrewLeft');
+  screw(memory, [1.55, 0.9, 0.22], silverMetal, 'MemoryBayScrewRight');
   torus(memory, 0.44, 0.055, [0, 0, 0.42], red, 'DataTransferRing');
 }
 

@@ -302,9 +302,10 @@ The rebuild is complete when a visitor can understand UFirst’s offer and reach
 - Camera body material set: `public/assets/camera/camera-body-albedo-v1.webp`, `camera-body-normal-v1.webp`, and `camera-body-roughness-v1.webp`, generated from a neutral photoreal material scan and loaded onto opaque camera-body surfaces at runtime; the maps are shared across quality tiers and remain separate from optical glass and electronic materials.
 - Timeline and camera choreography: `camera-keyframes.ts`, `CameraRig.ts`, `ScrollDirector.ts`, and `scene-moments.ts`.
 - The camera rig uses eased Catmull–Rom-style spatial segments with explicit keyframe progress, while FOV, roll, scene labels, and content ranges remain deterministic and reversible.
+- The interior pass keeps the camera shell as spatial context, isolates GLB materials per mesh so each assembly follows its own opacity timeline, and uses depth-ordered sensor, processor, memory, and optical stacks.
 - Adaptive performance: `quality-tiers.ts`, capped renderer pixel ratio, reduced surface loading on low tier, and direct Three.js updates outside React state.
 - Content management: `app/admin/AdminEditor.tsx` edits UFirst copy, chapter captions, backgrounds, services, project imagery, and scene surfaces. It also reports loaded image dimensions and recommended replacement sizes.
 - Failure handling: static hero fallback, semantic content sections, loader progress from `LoadingManager`, and reduced-motion static framing.
-- Validation completed: lint, production build, eight unit/asset tests, GLB node/triangle inspection, local browser asset-load and door-passage checks, public browser smoke checks, desktop/mobile checks, editor route check, and clean reduced-motion check.
+- Validation completed: lint, production build, nine unit/asset tests, GLB node/triangle inspection, local browser asset-load and door-passage checks, public browser smoke checks, desktop/mobile checks, editor route check, and clean reduced-motion check.
 
 The implementation is not marked production-final until the generated camera receives final optical/internal surface refinements, agency approval, and a production deployment validation using the three quality tiers.

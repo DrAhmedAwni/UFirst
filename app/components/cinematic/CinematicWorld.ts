@@ -467,7 +467,7 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
   const backLight = new PointLight(0x5f9bc0, mobile ? 100 : 150, 28, 2);
   backLight.position.set(2, -4, -10);
   root.add(backLight);
-  const innerLight = new PointLight(0x8edbe0, mobile ? 90 : 145, 17, 2);
+  const innerLight = new PointLight(0x8edbe0, mobile ? 145 : 240, 19, 2);
   innerLight.name = 'Lens interior fill';
   innerLight.position.set(-2.2, 1.4, -2.6);
   root.add(innerLight);
@@ -487,13 +487,13 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     { meshes: groups.exit, from: 0.82, to: 1 },
   ];
   const spatialGroups = [
-    { group: lensGroup, x: 0.18, y: 0.04, z: 0.2, rotation: -0.012 },
-    { group: apertureGroup, x: -0.2, y: 0.1, z: 0.1, rotation: 0.018 },
-    { group: shutterGroup, x: 0.14, y: -0.12, z: 0, rotation: -0.01 },
-    { group: sensorGroup, x: -0.15, y: 0.08, z: -0.08, rotation: 0.008 },
-    { group: processorGroup, x: 0.2, y: -0.08, z: -0.04, rotation: -0.014 },
-    { group: memoryGroup, x: -0.18, y: 0.12, z: 0.04, rotation: 0.012 },
-    { group: exitGroup, x: 0.1, y: -0.05, z: -0.06, rotation: -0.008 },
+    { group: lensGroup, x: 0.34, y: 0.06, z: 0.2, rotation: -0.012 },
+    { group: apertureGroup, x: -0.3, y: 0.12, z: 0.1, rotation: 0.018 },
+    { group: shutterGroup, x: 0.24, y: -0.14, z: 0, rotation: -0.01 },
+    { group: sensorGroup, x: -0.34, y: 0.1, z: -0.08, rotation: 0.008 },
+    { group: processorGroup, x: 0.38, y: -0.1, z: -0.04, rotation: -0.014 },
+    { group: memoryGroup, x: -0.34, y: 0.14, z: 0.04, rotation: 0.012 },
+    { group: exitGroup, x: 0.24, y: -0.06, z: -0.06, rotation: -0.008 },
     { group: surfaceGroup, x: 0, y: 0, z: 0.08, rotation: 0 },
   ];
   let activeGroups = groups;
@@ -514,7 +514,8 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     productionModel.traverse((object) => {
       if (!(object instanceof Mesh)) return;
       object.frustumCulled = false;
-        const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
+        const meshMaterials = (Array.isArray(object.material) ? object.material : [object.material]).map((material) => material.clone());
+        object.material = Array.isArray(object.material) ? meshMaterials : meshMaterials[0];
         meshMaterials.forEach((material) => {
           material.transparent = true;
           material.depthWrite = true;
@@ -555,13 +556,13 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
       { meshes: productionGroups.exit, from: 0.82, to: 1 },
     ];
     activeSpatialGroups = [
-      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[1])!, x: 0.18, y: 0.04, z: 0.2, rotation: -0.012 },
-      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[2])!, x: -0.2, y: 0.1, z: 0.1, rotation: 0.018 },
-      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[3])!, x: 0.14, y: -0.12, z: 0, rotation: -0.01 },
-      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[4])!, x: -0.15, y: 0.08, z: -0.08, rotation: 0.008 },
-      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[5])!, x: 0.2, y: -0.08, z: -0.04, rotation: -0.014 },
-      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[6])!, x: -0.18, y: 0.12, z: 0.04, rotation: 0.012 },
-      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[7])!, x: 0.1, y: -0.05, z: -0.06, rotation: -0.008 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[1])!, x: 0.34, y: 0.06, z: 0.2, rotation: -0.012 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[2])!, x: -0.3, y: 0.12, z: 0.1, rotation: 0.018 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[3])!, x: 0.24, y: -0.14, z: 0, rotation: -0.01 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[4])!, x: -0.34, y: 0.1, z: -0.08, rotation: 0.008 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[5])!, x: 0.38, y: -0.1, z: -0.04, rotation: -0.014 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[6])!, x: -0.34, y: 0.14, z: 0.04, rotation: 0.012 },
+      { group: productionModel.getObjectByName(JOURNEY_GROUP_NAMES[7])!, x: 0.24, y: -0.06, z: -0.06, rotation: -0.008 },
       { group: surfaceGroup, x: 0, y: 0, z: 0.08, rotation: 0 },
     ];
     setAssetStatus('production');
@@ -594,12 +595,13 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
       const focus = smoothWindow(value, from, to, 0.1);
       const exteriorLensFocus = index === 0 ? 1 - MathUtils.smoothstep(value, 0.12, 0.24) : 0;
       const visibility = Math.max(focus, exteriorLensFocus);
-      // Keep only the focal assembly in the optical path. Older planes recede
-      // completely so the next physical component can become the subject.
+      // Keep only the active assembly in the optical path. The low-opacity
+      // camera shell remains as spatial context without stacking every lens,
+      // shutter, and board on top of the subject.
       setOpacity(meshes, visibility * geometryBlend);
     });
 
-    setOpacity(activeGroups.shell, MathUtils.clamp(MathUtils.lerp(0.02, 0.96, Math.max(exteriorBlend, returnBlend)), 0.02, 0.96));
+    setOpacity(activeGroups.shell, MathUtils.clamp(MathUtils.lerp(0.14, 0.96, Math.max(exteriorBlend, returnBlend)), 0.14, 0.96));
     const doorVisibility = smoothWindow(value, 0.18, 0.53, 0.05);
     const doorOpen = MathUtils.smoothstep(value, 0.29, 0.46);
     doorAssembly.leftPivot.rotation.y = -doorOpen * Math.PI * 0.42;
@@ -614,7 +616,7 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     key.intensity = (mobile ? 130 : 190) + Math.sin(elapsed * 0.35) * 8;
     redLight.intensity = (mobile ? 120 : 180) + Math.cos(elapsed * 0.27) * 12;
     backLight.intensity = (mobile ? 100 : 150) + Math.sin(elapsed * 0.22) * 10 + exploded * 35;
-    innerLight.intensity = (mobile ? 6 : 11) * (0.34 + (1 - exteriorBlend) * 0.66) + Math.sin(elapsed * 0.4) * 0.4;
+    innerLight.intensity = (mobile ? 18 : 32) * (0.46 + (1 - exteriorBlend) * 0.7) + Math.sin(elapsed * 0.4) * 0.8;
     doorLight.intensity = (mobile ? 46 : 72) * doorOpen * doorVisibility;
   };
 
