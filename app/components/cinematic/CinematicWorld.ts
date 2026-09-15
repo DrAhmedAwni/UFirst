@@ -1,5 +1,6 @@
 import {
   AmbientLight,
+  AdditiveBlending,
   BoxGeometry,
   CylinderGeometry,
   DoubleSide,
@@ -310,7 +311,7 @@ function addDoors(group: Group, materials: Material[], groups: JourneyGroups) {
   const doorEdge = createMaterial(materials, 0x738084, { roughness: 0.22, metalness: 0.92 });
   const doorInset = createMaterial(materials, 0x080b0d, { roughness: 0.72, metalness: 0.12 });
   const doorAccent = createMaterial(materials, 0xc30f1d, { roughness: 0.26, metalness: 0.54, emissive: 0x290205, emissiveIntensity: 0.42 });
-  const lightLeak = createMaterial(materials, 0xffc7a1, { roughness: 0.2, metalness: 0, emissive: 0xff6b36, emissiveIntensity: 1.8, transparent: true, opacity: 0 });
+  const lightLeak = createMaterial(materials, 0xffc7a1, { roughness: 0.2, metalness: 0, emissive: 0xff6b36, emissiveIntensity: 1.8, transparent: true, opacity: 0, depthWrite: false, blending: AdditiveBlending });
 
   group.position.z = -3.72;
   const leftPivot = new Group();
@@ -338,14 +339,14 @@ function addDoors(group: Group, materials: Material[], groups: JourneyGroups) {
   addRoundedBox(group, [6.12, 0.5, 0.54], [0, 2.66, 0], doorBody, 'DoorHeader', groups.doors, 0.12);
   addRoundedBox(group, [6.12, 0.34, 1.08], [0, -2.76, 0], doorEdge, 'DoorThreshold', groups.doors, 0.08);
   addBox(group, [5.2, 0.08, 0.08], [0, 2.38, -0.3], doorAccent, 'DoorHeaderAccent', groups.doors);
-  addRoundedBox(group, [3.86, 4.62, 0.06], [0, 0, -0.38], lightLeak, 'DoorLightLeak', groups.doors, 0.06);
+  const lightLeakMesh = addRoundedBox(group, [3.86, 4.62, 0.06], [0, 0, -0.38], lightLeak, 'DoorLightLeak', groups.doors, 0.06);
   for (let index = 0; index < 4; index += 1) {
     const y = -1.9 + index * 1.25;
     addScrew(group, [-2.82, y, -0.34], doorEdge, `LeftDoorHinge${String(index + 1).padStart(2, '0')}`, groups.doors);
     addScrew(group, [2.82, y, -0.34], doorEdge, `RightDoorHinge${String(index + 1).padStart(2, '0')}`, groups.doors);
   }
 
-  return { leftPivot, rightPivot };
+  return { leftPivot, rightPivot, lightLeakMesh };
 }
 
 function addContentScreen(parent: Group, texture: Texture, position: [number, number, number], size: [number, number], name: string, material: MeshPhysicalMaterial, list: MeshList, materials: Material[], rotationY = 0) {
@@ -468,7 +469,7 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
   root.add(backLight);
   const innerLight = new PointLight(0x8edbe0, mobile ? 90 : 145, 17, 2);
   innerLight.name = 'Lens interior fill';
-  innerLight.position.set(-0.4, 0.6, -3.1);
+  innerLight.position.set(-2.2, 1.4, -2.6);
   root.add(innerLight);
   const doorLight = new PointLight(0xff8b5b, 0, 11, 2);
   doorLight.name = 'Warm light beyond the doors';
@@ -513,12 +514,22 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     productionModel.traverse((object) => {
       if (!(object instanceof Mesh)) return;
       object.frustumCulled = false;
-      const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
-      meshMaterials.forEach((material) => {
-        material.transparent = true;
-        material.depthWrite = true;
-        const isCameraBodySurface = /camera(body|top|bottom|left|right)|body|chassis|plate|rail|grip|handle|shell|rear|batterydoor/i.test(object.name)
-          && !/lens|optical|sensor|processor|memory|display|viewfinder|shutter|aperture|accent|seal|screw|fastener/i.test(object.name);
+        const meshMaterials = Array.isArray(object.material) ? object.material : [object.material];
+        meshMaterials.forEach((material) => {
+          material.transparent = true;
+          material.depthWrite = true;
+          const isOpticalSurface = /lens|optical|glass|viewfinder/i.test(object.name);
+          if (isOpticalSurface) {
+            const optical = material as MeshPhysicalMaterial;
+            // The camera is entered through these elements. Keep real glass visible,
+            // but never let a solid optical plate become a full-screen color wash.
+            optical.opacity = Math.min(optical.opacity ?? 1, 0.42);
+            optical.transmission = Math.min(optical.transmission ?? 0.3, 0.36);
+            optical.roughness = Math.min(optical.roughness ?? 0.12, 0.16);
+            optical.depthWrite = false;
+          }
+          const isCameraBodySurface = /camera(body|top|bottom|left|right)|body|chassis|plate|rail|grip|handle|shell|rear|batterydoor/i.test(object.name)
+            && !/lens|optical|sensor|processor|memory|display|viewfinder|shutter|aperture|accent|seal|screw|fastener/i.test(object.name);
         if (isCameraBodySurface) {
           const physicallyBased = material as MeshPhysicalMaterial;
           physicallyBased.map = cameraBodyAlbedo;
@@ -582,8 +593,10 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     activeComponentGroups.forEach(({ meshes, from, to }, index) => {
       const focus = smoothWindow(value, from, to, 0.1);
       const exteriorLensFocus = index === 0 ? 1 - MathUtils.smoothstep(value, 0.12, 0.24) : 0;
-      const visibility = Math.max(focus, exteriorLensFocus, value > 0.22 && value < 0.92 ? 0.18 : 0);
-      setOpacity(meshes, MathUtils.lerp(0.12, 1, visibility) * geometryBlend);
+      const visibility = Math.max(focus, exteriorLensFocus);
+      // Keep only the focal assembly in the optical path. Older planes recede
+      // completely so the next physical component can become the subject.
+      setOpacity(meshes, visibility * geometryBlend);
     });
 
     setOpacity(activeGroups.shell, MathUtils.clamp(MathUtils.lerp(0.02, 0.96, Math.max(exteriorBlend, returnBlend)), 0.02, 0.96));
@@ -594,12 +607,14 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     doorAssembly.leftPivot.position.z = -doorOpen * 0.12;
     doorAssembly.rightPivot.position.z = -doorOpen * 0.12;
     setOpacity(groups.doors, doorVisibility);
+    const lightLeakMaterial = doorAssembly.lightLeakMesh.material as MeshPhysicalMaterial;
+    lightLeakMaterial.opacity = doorVisibility * MathUtils.lerp(0.015, 0.12, doorOpen);
     setOpacity(groups.serviceSurfaces, smoothWindow(value, 0.27, 0.5, 0.06));
     setOpacity(groups.workSurfaces, smoothWindow(value, 0.43, 0.78, 0.07) * (1 - MathUtils.smoothstep(value, 0.84, 0.94)));
     key.intensity = (mobile ? 130 : 190) + Math.sin(elapsed * 0.35) * 8;
     redLight.intensity = (mobile ? 120 : 180) + Math.cos(elapsed * 0.27) * 12;
     backLight.intensity = (mobile ? 100 : 150) + Math.sin(elapsed * 0.22) * 10 + exploded * 35;
-    innerLight.intensity = (mobile ? 4 : 6) * (0.28 + (1 - exteriorBlend) * 0.72) + Math.sin(elapsed * 0.4) * 0.4;
+    innerLight.intensity = (mobile ? 6 : 11) * (0.34 + (1 - exteriorBlend) * 0.66) + Math.sin(elapsed * 0.4) * 0.4;
     doorLight.intensity = (mobile ? 46 : 72) * doorOpen * doorVisibility;
   };
 

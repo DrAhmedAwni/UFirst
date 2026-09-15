@@ -4,7 +4,7 @@
 .cinematic-sticky { position: relative; top: 0; height: 100svh; min-height: 620px; overflow: visible; background: #050708; }
 .cinematic-fallback, .cinematic-canvas, .cinematic-atmosphere { position: fixed; inset: 0; }
 .cinematic-fallback { z-index: 0; background: linear-gradient(90deg, rgba(5, 7, 8, .98), rgba(5, 7, 8, .8) 52%, rgba(5, 7, 8, .42)), var(--cinematic-fallback) center / cover; filter: grayscale(.88) contrast(1.12); opacity: 0; transition: opacity 1s ease; }
-.cinematic-canvas { z-index: 4; width: 100%; height: 100%; mix-blend-mode: screen; pointer-events: none; }
+.cinematic-canvas { z-index: 4; width: 100%; height: 100%; mix-blend-mode: normal; pointer-events: none; }
 .cinematic-atmosphere { z-index: 2; background: radial-gradient(circle at 72% 45%, rgba(38, 156, 169, .1), transparent 25%), radial-gradient(circle at 14% 82%, rgba(240, 19, 22, .06), transparent 30%), linear-gradient(180deg, rgba(0, 0, 0, .05), rgba(0, 0, 0, .2)); pointer-events: none; }
 .cinematic-ui { position: relative; z-index: 6; display: flex; min-height: 100%; flex-direction: column; justify-content: space-between; padding: 132px 48px 36px; pointer-events: none; }
 .cinematic-copy { position: relative; isolation: isolate; width: min(560px, 42vw); transition: opacity .5s ease; pointer-events: auto; }

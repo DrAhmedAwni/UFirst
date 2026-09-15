@@ -203,38 +203,38 @@ function buildSensor(group) {
   const sensor = pivot(group, 'SensorPivot', [0, 0, -4.08]);
   rounded(sensor, [3.88, 2.96, 0.18], [0, 0, 0], blackMetal, 'InternalFrame', 0.1);
   rounded(sensor, [3.12, 2.18, 0.15], [0, 0, -0.12], sensorMaterial, 'Sensor', 0.04);
-  torus(sensor, 1.56, 0.065, [0, 0, -0.22], red, 'SensorReadoutRing');
+  torus(sensor, 1.56, 0.065, [0, 0, 0.03], red, 'SensorReadoutRing');
   const sensorRows = distant ? 3 : mobile ? 5 : 7;
   const sensorColumns = distant ? 5 : mobile ? 8 : 10;
   for (let y = 0; y < sensorRows; y += 1) {
     for (let x = 0; x < sensorColumns; x += 1) {
-      box(sensor, [0.075, 0.075, 0.025], [-0.84 + x * 0.24, -0.48 + y * 0.24, -0.22], white, `SensorPixel${String(y * sensorColumns + x + 1).padStart(3, '0')}`);
+      box(sensor, [0.075, 0.075, 0.025], [-0.84 + x * 0.24, -0.48 + y * 0.24, 0.04], white, `SensorPixel${String(y * sensorColumns + x + 1).padStart(3, '0')}`);
     }
   }
-  for (let index = 0; index < 12; index += 1) box(sensor, [0.08, 0.32, 0.04], [-1.34 + index * 0.24, -1.28, -0.2], copper, `SensorContact${String(index + 1).padStart(2, '0')}`);
+  for (let index = 0; index < 12; index += 1) box(sensor, [0.08, 0.32, 0.04], [-1.34 + index * 0.24, -1.28, 0.04], copper, `SensorContact${String(index + 1).padStart(2, '0')}`);
 }
 
 function buildProcessor(group) {
   const processor = pivot(group, 'ProcessorPivot', [0, 0, -5.55]);
   rounded(processor, [4.28, 2.92, 0.16], [0, 0, 0], board, 'MainBoard', 0.08);
-  rounded(processor, [1.26, 0.96, 0.22], [-0.72, 0.38, -0.16], blackMetal, 'Processor', 0.08);
-  rounded(processor, [0.82, 0.68, 0.18], [0.92, -0.48, -0.16], blackMetal, 'SignalProcessor', 0.06);
-  rounded(processor, [0.56, 0.46, 0.15], [1.38, 0.55, -0.15], silverMetal, 'ControlChip', 0.04);
+  rounded(processor, [1.26, 0.96, 0.22], [-0.72, 0.38, 0.16], blackMetal, 'Processor', 0.08);
+  rounded(processor, [0.82, 0.68, 0.18], [0.92, -0.48, 0.16], blackMetal, 'SignalProcessor', 0.06);
+  rounded(processor, [0.56, 0.46, 0.15], [1.38, 0.55, 0.15], silverMetal, 'ControlChip', 0.04);
   for (let index = 0; index < 8; index += 1) {
-    box(processor, [0.08, 2.02, 0.04], [-1.62 + index * 0.46, 0, -0.12], copper, `BoardTrace${String(index + 1).padStart(2, '0')}`);
+    box(processor, [0.08, 2.02, 0.04], [-1.62 + index * 0.46, 0, 0.09], copper, `BoardTrace${String(index + 1).padStart(2, '0')}`);
   }
   for (let index = 0; index < 6; index += 1) {
-    verticalCylinder(processor, 0.09, 0.16, [-1.6 + index * 0.55, 1.0, -0.15], silverMetal, `BoardCapacitor${String(index + 1).padStart(2, '0')}`, 16);
+    verticalCylinder(processor, 0.09, 0.16, [-1.6 + index * 0.55, 1.0, 0.14], silverMetal, `BoardCapacitor${String(index + 1).padStart(2, '0')}`, 16);
   }
-  torus(processor, 0.44, 0.055, [-0.72, 0.38, -0.3], red, 'CreativeSignalRing');
+  torus(processor, 0.44, 0.055, [-0.72, 0.38, 0.28], red, 'CreativeSignalRing');
 }
 
 function buildMemory(group) {
   const memory = pivot(group, 'MemoryPivot', [0, 0, -6.95]);
   rounded(memory, [3.62, 2.55, 0.32], [0, 0, 0], blackMetal, 'MemoryBay', 0.12);
-  rounded(memory, [2.54, 1.52, 0.2], [0, 0, -0.2], board, 'MemoryCard', 0.08);
-  for (let index = 0; index < 10; index += 1) box(memory, [0.13, 0.55, 0.04], [-0.78 + index * 0.175, -0.96, -0.33], copper, `MemoryContact${String(index + 1).padStart(2, '0')}`);
-  torus(memory, 0.44, 0.055, [0, 0, -0.34], red, 'DataTransferRing');
+  rounded(memory, [2.54, 1.52, 0.2], [0, 0, 0.2], board, 'MemoryCard', 0.08);
+  for (let index = 0; index < 10; index += 1) box(memory, [0.13, 0.55, 0.04], [-0.78 + index * 0.175, -0.96, 0.35], copper, `MemoryContact${String(index + 1).padStart(2, '0')}`);
+  torus(memory, 0.44, 0.055, [0, 0, 0.42], red, 'DataTransferRing');
 }
 
 function buildExit(group) {
