@@ -38,7 +38,7 @@ This is a cinematic product visualisation of UFirst’s way of working, not a ge
 
 ## 3. Rebuild decision
 
-The current UFirst implementation is treated as an exploratory prototype, not as the final architecture. It already provides useful content, route structure, admin editing, procedural camera geometry, camera keyframes, and local image assets. The final build may replace the current landing-page composition and refactor the scene completely while preserving approved UFirst copy and the editor capability.
+The current UFirst implementation is the production experience foundation: it provides the persistent journey shell, semantic content, admin editing, original GLB camera assets, camera keyframes, and local image surfaces. The final production pass can replace the generated asset revision with an approved textured/optimized revision while preserving the content model and editor capability.
 
 The current audit found:
 
