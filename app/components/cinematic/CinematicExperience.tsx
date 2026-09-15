@@ -29,6 +29,7 @@ export default function CinematicExperience({ content, paused, onPausedChange }:
     hero: content.hero.background.src,
     cameraModel: '/models/ufirst-camera-production.glb',
     cameraModelMobile: '/models/ufirst-camera-mobile.glb',
+    cameraModelDistant: '/models/ufirst-camera-distant.glb',
     cameraExterior: '/assets/camera/ufirst-camera-exterior-v2.png',
     cameraExploded: '/assets/camera/ufirst-camera-exploded-v2.png',
     about: content.about.image.src,

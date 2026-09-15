@@ -442,7 +442,7 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
   let activeComponentGroups = componentGroups;
   let activeSpatialGroups = spatialGroups;
   const productionLoader = new GLTFLoader(manager);
-  const modelUrl = mobile || quality === 'low' ? assets.cameraModelMobile : assets.cameraModel;
+  const modelUrl = mobile ? assets.cameraModelMobile : quality === 'low' ? assets.cameraModelDistant : assets.cameraModel;
   productionLoader.load(modelUrl, (gltf) => {
     const productionModel = gltf.scene;
     const productionGroups = collectGroupMeshes(productionModel, JOURNEY_GROUP_NAMES);

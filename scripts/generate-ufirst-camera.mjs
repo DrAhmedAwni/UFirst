@@ -25,11 +25,12 @@ globalThis.FileReader = class FileReader {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mobile = process.argv.includes('--mobile');
-const outputPath = path.resolve(__dirname, mobile ? '../public/models/ufirst-camera-mobile.glb' : '../public/models/ufirst-camera-production.glb');
+const distant = process.argv.includes('--distant');
+const outputPath = path.resolve(__dirname, distant ? '../public/models/ufirst-camera-distant.glb' : mobile ? '../public/models/ufirst-camera-mobile.glb' : '../public/models/ufirst-camera-production.glb');
 const materials = [];
 
-const radial = (value) => mobile ? Math.max(16, Math.round(value * 0.55)) : value;
-const detail = (value) => mobile ? Math.max(2, value - 1) : value;
+const radial = (value) => distant ? Math.max(10, Math.round(value * 0.3)) : mobile ? Math.max(16, Math.round(value * 0.55)) : value;
+const detail = (value) => distant ? 1 : mobile ? Math.max(2, value - 1) : value;
 
 function material(color, options = {}) {
   const value = new MeshPhysicalMaterial({
@@ -89,7 +90,7 @@ function screw(parent, position, metal, name, rotation = [Math.PI / 2, 0, 0]) {
 function dial(parent, position, dark, metal, accent, name) {
   verticalCylinder(parent, 0.34, 0.22, position, dark, `${name} base`, 36);
   torus(parent, 0.34, 0.045, [position[0], position[1] + 0.12, position[2]], accent, `${name} accent`, [Math.PI / 2, 0, 0]);
-  const knurls = mobile ? 10 : 18;
+  const knurls = distant ? 6 : mobile ? 10 : 18;
   for (let index = 0; index < knurls; index += 1) {
     const angle = (index / knurls) * Math.PI * 2;
     box(parent, [0.035, 0.09, 0.09], [position[0] + Math.cos(angle) * 0.31, position[1] + 0.14, position[2] + Math.sin(angle) * 0.31], metal, `${name} knurl ${String(index + 1).padStart(2, '0')}`, [0, angle, 0]);
@@ -203,8 +204,8 @@ function buildSensor(group) {
   rounded(sensor, [3.88, 2.96, 0.18], [0, 0, 0], blackMetal, 'InternalFrame', 0.1);
   rounded(sensor, [3.12, 2.18, 0.15], [0, 0, -0.12], sensorMaterial, 'Sensor', 0.04);
   torus(sensor, 1.56, 0.065, [0, 0, -0.22], red, 'SensorReadoutRing');
-  const sensorRows = mobile ? 5 : 7;
-  const sensorColumns = mobile ? 8 : 10;
+  const sensorRows = distant ? 3 : mobile ? 5 : 7;
+  const sensorColumns = distant ? 5 : mobile ? 8 : 10;
   for (let y = 0; y < sensorRows; y += 1) {
     for (let x = 0; x < sensorColumns; x += 1) {
       box(sensor, [0.075, 0.075, 0.025], [-0.84 + x * 0.24, -0.48 + y * 0.24, -0.22], white, `SensorPixel${String(y * sensorColumns + x + 1).padStart(3, '0')}`);

@@ -270,7 +270,7 @@ Before wiring the full journey, verify:
 - the model can be framed at desktop, tablet, and mobile aspect ratios;
 - the asset has no unapproved logos, watermarks, fake client marks, or invented text.
 
-The current generated assets pass the structural portion of this gate: `public/models/ufirst-camera-production.glb` is 81,288 triangles and `public/models/ufirst-camera-mobile.glb` is 32,364 triangles; both expose the required named components and pivots, load through `GLTFLoader` in the local browser, and contain no external texture dependency. Photoreal surface validation, final LOD validation, and agency visual approval remain open.
+The current generated assets pass the structural portion of this gate: `public/models/ufirst-camera-production.glb` is 81,288 triangles, `public/models/ufirst-camera-mobile.glb` is 32,364 triangles, and `public/models/ufirst-camera-distant.glb` is 23,288 triangles. All three expose the required named components and pivots, load through `GLTFLoader` in the local browser, and contain no external texture dependency. Photoreal surface validation and agency visual approval remain open.
 
 ## 11. Temporary asset policy
 

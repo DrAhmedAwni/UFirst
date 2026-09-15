@@ -3,7 +3,7 @@
 Status: implementation checkpoint
 Scope: UFirst only
 
-The current experience loads an original UFirst production-format GLB for the interactive camera. Desktop/high tiers use the 81,288-triangle asset; mobile/low tiers use the 32,364-triangle companion. Both contain separated camera geometry, named journey groups, and animation-ready pivots. The original procedural Three.js geometry remains available only as a load-failure fallback. No third-party model or unlicensed GLB was downloaded. Raster images are used as approved UFirst content surfaces and fallback imagery; they are not used as the interactive camera body.
+The current experience loads original UFirst production-format GLBs for the interactive camera. Desktop/high tiers use the 81,288-triangle asset, mobile uses the 32,364-triangle companion, and low desktop quality uses a 23,288-triangle distant tier. All three contain separated camera geometry, named journey groups, and animation-ready pivots. The original procedural Three.js geometry remains available only as a load-failure fallback. No third-party model or unlicensed GLB was downloaded. Raster images are used as approved UFirst content surfaces and fallback imagery; they are not used as the interactive camera body.
 
 ## Interactive geometry currently in the runtime
 
@@ -42,6 +42,6 @@ The source paths and current roles are recorded in `public/models/asset-manifest
 
 ## Remaining production polish
 
-The runtime now uses `public/models/ufirst-camera-production.glb` on desktop and `public/models/ufirst-camera-mobile.glb` on mobile/low tiers. They are original genuine 3D camera assets, not flat mockups or drawings: the high asset is 81,288 triangles/242 meshes and the mobile asset is 32,364 triangles/196 meshes. The remaining production polish is photoreal surface texturing, final LOD1/LOD2 optimization, and agency approval against the acceptance gate in `docs/3D-ASSET-REQUIREMENTS.md`.
+The runtime now uses `public/models/ufirst-camera-production.glb` on high desktop, `public/models/ufirst-camera-mobile.glb` on mobile, and `public/models/ufirst-camera-distant.glb` on low desktop quality. They are original genuine 3D camera assets, not flat mockups or drawings: the high asset is 81,288 triangles/242 meshes, the mobile asset is 32,364 triangles/196 meshes, and the distant asset is 23,288 triangles/163 meshes. The remaining production polish is photoreal surface texturing and agency approval against the acceptance gate in `docs/3D-ASSET-REQUIREMENTS.md`.
 
 The runtime scene contract is isolated so an approved textured/optimized revision can replace this GLB without changing the content model, admin dashboard, scroll timeline, or semantic fallback. If the GLB fails to load, the original procedural model is used as a documented emergency fallback.

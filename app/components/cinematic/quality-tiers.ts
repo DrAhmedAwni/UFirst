@@ -4,6 +4,7 @@ export function detectCinematicQuality(mobile: boolean): CinematicQuality {
   if (mobile) return 'low';
   const deviceMemory = 'deviceMemory' in navigator ? Number((navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 8) : 8;
   const cores = navigator.hardwareConcurrency || 8;
+  if (deviceMemory <= 2 || cores <= 2) return 'low';
   if (deviceMemory <= 4 || cores <= 4) return 'medium';
   return 'high';
 }

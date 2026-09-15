@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const modelPath = new URL('../public/models/ufirst-camera-production.glb', import.meta.url);
 const mobileModelPath = new URL('../public/models/ufirst-camera-mobile.glb', import.meta.url);
+const distantModelPath = new URL('../public/models/ufirst-camera-distant.glb', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('../public/models/asset-manifest.json', import.meta.url), 'utf8'));
 
 function readGlbJson(buffer) {
@@ -69,4 +70,17 @@ test('mobile camera GLB keeps the journey contract inside the low-quality budget
   const asset = manifest.assets.find((entry) => entry.id === 'camera-production-mobile-glb');
   assert.equal(asset.path, 'public/models/ufirst-camera-mobile.glb');
   assert.equal(asset.triangleCount, 32364);
+});
+
+test('distant camera GLB preserves the silhouette contract at low desktop quality', () => {
+  const buffer = readFileSync(distantModelPath);
+  const gltf = readGlbJson(buffer);
+  const names = new Set((gltf.nodes ?? []).map((node) => node.name));
+  assert.ok(names.has('CameraRoot'));
+  assert.ok(names.has('00 Camera exterior'));
+  assert.ok(names.has('07 Viewfinder / results'));
+  assert.ok((gltf.meshes ?? []).length > 100);
+  const asset = manifest.assets.find((entry) => entry.id === 'camera-production-distant-glb');
+  assert.equal(asset.path, 'public/models/ufirst-camera-distant.glb');
+  assert.equal(asset.triangleCount, 23288);
 });
