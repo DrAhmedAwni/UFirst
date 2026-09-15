@@ -5,6 +5,10 @@ export type AdminIdentity = {
   email: string;
 };
 
+export function isAdminEnabled() {
+  return process.env.UFIRST_ADMIN_ENABLED === 'true';
+}
+
 function configuredAdminEmails() {
   return (process.env.UFIRST_ADMIN_EMAILS ?? '')
     .split(',')
@@ -13,6 +17,8 @@ function configuredAdminEmails() {
 }
 
 export async function getAdminIdentity(): Promise<AdminIdentity | null> {
+  if (!isAdminEnabled()) return null;
+
   const requestHeaders = await headers();
   const id = requestHeaders.get('oai-authenticated-user-id');
   const email = requestHeaders.get('oai-authenticated-user-email')?.toLowerCase();
@@ -27,6 +33,8 @@ export async function getAdminIdentity(): Promise<AdminIdentity | null> {
 }
 
 export function adminSetupMessage() {
+  if (!isAdminEnabled()) {
+    return 'The content manager will be restored when persistent storage is connected.';
+  }
   return 'Admin access is not configured yet. Add the U FIRST administrator email to UFIRST_ADMIN_EMAILS before publishing.';
 }
-
