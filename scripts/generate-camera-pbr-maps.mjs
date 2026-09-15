@@ -44,14 +44,8 @@ for (let y = 0; y < size; y += 1) {
 
 await Promise.all([
   sharp(normal, { raw: { width: size, height: size, channels: 4 } })
-    .png()
-    .toFile(path.join(assetDir, 'camera-body-normal-v1.png')),
-  sharp(normal, { raw: { width: size, height: size, channels: 4 } })
     .webp({ quality: 82 })
     .toFile(path.join(assetDir, 'camera-body-normal-v1.webp')),
-  sharp(roughness, { raw: { width: size, height: size, channels: 4 } })
-    .png()
-    .toFile(path.join(assetDir, 'camera-body-roughness-v1.png')),
   sharp(roughness, { raw: { width: size, height: size, channels: 4 } })
     .webp({ quality: 82 })
     .toFile(path.join(assetDir, 'camera-body-roughness-v1.webp')),
