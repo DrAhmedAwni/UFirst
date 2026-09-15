@@ -1,0 +1,11 @@
+{
+  "name": "UFirst camera body PBR surface set",
+  "source": "AI-generated neutral material scan, then derived normal and roughness maps",
+  "maps": {
+    "albedo": "/assets/camera/camera-body-albedo-v1.webp",
+    "normal": "/assets/camera/camera-body-normal-v1.webp",
+    "roughness": "/assets/camera/camera-body-roughness-v1.webp"
+  },
+  "resolution": "716x716",
+  "colorSpace": "sRGB albedo; linear normal and roughness at runtime"
+}

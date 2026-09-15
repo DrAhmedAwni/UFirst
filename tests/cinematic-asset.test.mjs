@@ -55,7 +55,7 @@ test('production camera GLB exposes the full exploded journey contract', () => {
   assert.ok((gltf.meshes ?? []).length > 100);
   const asset = manifest.assets.find((entry) => entry.id === 'camera-production-glb');
   assert.equal(asset.path, 'public/models/ufirst-camera-production.glb');
-  assert.equal(asset.status, 'in-progress');
+  assert.equal(asset.status, 'implemented; final art approval pending');
   assert.equal(asset.triangleCount, 81288);
 });
 

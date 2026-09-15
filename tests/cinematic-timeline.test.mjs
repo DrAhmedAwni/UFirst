@@ -23,6 +23,16 @@ test('cinematic camera keyframes cover the complete journey with separate target
   assert.notDeepEqual(frames[3].position, frames[3].target);
 });
 
+test('responsive camera compositions are authored for tablet and mobile', () => {
+  for (const variant of [keyframes.CINEMATIC_KEYFRAMES_TABLET, keyframes.CINEMATIC_KEYFRAMES_MOBILE]) {
+    assert.equal(variant.length, keyframes.CINEMATIC_KEYFRAMES.length);
+    assert.equal(variant[0].progress, 0);
+    assert.equal(variant.at(-1).progress, 1);
+    assert.ok(variant.some((frame) => frame.scene === 'doors'));
+    assert.notDeepEqual(variant[0].position, keyframes.CINEMATIC_KEYFRAMES[0].position);
+  }
+});
+
 test('scroll director ranges are ordered and reversible', () => {
   const ranges = scroll.CINEMATIC_RANGES;
   assert.equal(ranges[0].from, 0);

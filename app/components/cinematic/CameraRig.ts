@@ -1,15 +1,15 @@
 import { MathUtils, PerspectiveCamera, Vector3 } from 'three';
-import { CINEMATIC_KEYFRAMES } from './camera-keyframes';
+import { CINEMATIC_KEYFRAMES, CINEMATIC_KEYFRAMES_MOBILE, CINEMATIC_KEYFRAMES_TABLET } from './camera-keyframes';
 import type { CinematicSample } from './types';
 
-function timelineValue(progress: number, key: 'fov' | 'roll') {
-  const first = CINEMATIC_KEYFRAMES[0];
-  const last = CINEMATIC_KEYFRAMES[CINEMATIC_KEYFRAMES.length - 1];
+function timelineValue(progress: number, key: 'fov' | 'roll', keyframes: typeof CINEMATIC_KEYFRAMES) {
+  const first = keyframes[0];
+  const last = keyframes[keyframes.length - 1];
   if (progress <= first.progress) return first[key];
   if (progress >= last.progress) return last[key];
-  for (let index = 1; index < CINEMATIC_KEYFRAMES.length; index += 1) {
-    const current = CINEMATIC_KEYFRAMES[index];
-    const previous = CINEMATIC_KEYFRAMES[index - 1];
+  for (let index = 1; index < keyframes.length; index += 1) {
+    const current = keyframes[index];
+    const previous = keyframes[index - 1];
     if (progress <= current.progress) {
       const t = MathUtils.smoothstep((progress - previous.progress) / (current.progress - previous.progress), 0, 1);
       return MathUtils.lerp(previous[key], current[key], t);
@@ -18,10 +18,10 @@ function timelineValue(progress: number, key: 'fov' | 'roll') {
   return last[key];
 }
 
-function pathValue(progress: number, key: 'position' | 'target', output: Vector3) {
+function pathValue(progress: number, key: 'position' | 'target', output: Vector3, keyframes: typeof CINEMATIC_KEYFRAMES) {
   const value = MathUtils.clamp(progress, 0, 1);
-  const first = CINEMATIC_KEYFRAMES[0];
-  const last = CINEMATIC_KEYFRAMES[CINEMATIC_KEYFRAMES.length - 1];
+  const first = keyframes[0];
+  const last = keyframes[keyframes.length - 1];
   if (value <= first.progress) {
     output.set(...first[key]);
     return output;
@@ -30,13 +30,13 @@ function pathValue(progress: number, key: 'position' | 'target', output: Vector3
     output.set(...last[key]);
     return output;
   }
-  for (let index = 1; index < CINEMATIC_KEYFRAMES.length; index += 1) {
-    const current = CINEMATIC_KEYFRAMES[index];
-    const previous = CINEMATIC_KEYFRAMES[index - 1];
+  for (let index = 1; index < keyframes.length; index += 1) {
+    const current = keyframes[index];
+    const previous = keyframes[index - 1];
     if (value <= current.progress) {
       const t = MathUtils.smoothstep((value - previous.progress) / (current.progress - previous.progress), 0, 1);
-      const before = CINEMATIC_KEYFRAMES[Math.max(0, index - 2)][key];
-      const after = CINEMATIC_KEYFRAMES[Math.min(CINEMATIC_KEYFRAMES.length - 1, index + 1)][key];
+      const before = keyframes[Math.max(0, index - 2)][key];
+      const after = keyframes[Math.min(keyframes.length - 1, index + 1)][key];
       const p0 = before;
       const p1 = previous[key];
       const p2 = current[key];
@@ -67,22 +67,15 @@ export class CameraRig {
 
   sample(progress: number, aspect: number): CinematicSample {
     const value = MathUtils.clamp(progress, 0, 1);
-    pathValue(value, 'position', this.position);
-    pathValue(value, 'target', this.pathTarget);
-    const portrait = aspect < 0.78;
-    if (portrait) {
-      this.position.x *= 0.56;
-      this.position.y += 0.22;
-      this.position.z += value < 0.32 ? 0.65 : 1.15;
-      this.pathTarget.x *= 0.72;
-      this.pathTarget.y += 0.18;
-    }
+    const keyframes = aspect < 0.78 ? CINEMATIC_KEYFRAMES_MOBILE : aspect < 1.1 ? CINEMATIC_KEYFRAMES_TABLET : CINEMATIC_KEYFRAMES;
+    pathValue(value, 'position', this.position, keyframes);
+    pathValue(value, 'target', this.pathTarget, keyframes);
     return {
       position: this.position.clone(),
       target: this.pathTarget.clone(),
-      fov: timelineValue(value, 'fov') + (portrait ? 7 : aspect < 1.1 ? 3 : 0),
-      roll: timelineValue(value, 'roll') * (portrait ? 0.55 : 1),
-      scene: CINEMATIC_KEYFRAMES.reduce((current, frame) => value >= frame.progress ? frame : current, CINEMATIC_KEYFRAMES[0]).scene,
+      fov: timelineValue(value, 'fov', keyframes),
+      roll: timelineValue(value, 'roll', keyframes),
+      scene: keyframes.reduce((current, frame) => value >= frame.progress ? frame : current, keyframes[0]).scene,
     };
   }
 

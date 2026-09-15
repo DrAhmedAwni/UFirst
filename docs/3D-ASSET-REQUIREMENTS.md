@@ -16,8 +16,8 @@ Preferred delivery format: GLB with embedded or explicitly documented textures. 
 
 | Priority | Asset | Needed for | Current status |
 | --- | --- | --- | --- |
-| P0 | Separated realistic camera model | Reveal, lens entry, exploded journey, reassembly | Original production-format GLB generated; photoreal texture/LOD polish pending |
-| P0 | Camera material/texture set | Photorealistic product lighting | Required with model |
+| P0 | Separated realistic camera model | Reveal, lens entry, exploded journey, reassembly | Original high/mobile/distant production-format GLBs implemented; final art approval pending |
+| P0 | Camera material/texture set | Photorealistic product lighting | Shared compressed PBR body set implemented; optical/internal refinements pending |
 | P0 | Lens optical assembly | Entry transition and internal journey | Required as separated meshes |
 | P0 | Internal camera mechanism | Storytelling through components | Required as separated meshes or approved simplified mechanism |
 | P1 | Studio environment | Scale, lighting, reveal, exit | Can begin procedurally; production HDRI/environment later |
@@ -67,6 +67,8 @@ These are targets, not a reason to sacrifice silhouette or material quality. The
 - Internal frame: matte and machined metals with distinct roughness values.
 - PCB/processor: restrained green board, metal contacts, and no fake readable claims.
 - Buttons/dials: separate tactile materials with different roughness and highlight response.
+
+Current implemented body surface set: `public/assets/camera/camera-body-albedo-v1.webp`, `camera-body-normal-v1.webp`, and `camera-body-roughness-v1.webp` at 716×716. The albedo is a neutral photoreal material scan; the normal and roughness maps are derived from the same surface so the three maps remain aligned. The runtime applies them only to opaque body/shell/plate/grip surfaces and leaves glass, sensor, PCB, copper, red accents, and metal rings on their authored material families.
 
 ### ANIMATIONS
 
@@ -303,7 +305,7 @@ Before wiring the full journey, verify:
 - the model can be framed at desktop, tablet, and mobile aspect ratios;
 - the asset has no unapproved logos, watermarks, fake client marks, or invented text.
 
-The current generated assets pass the structural portion of this gate: `public/models/ufirst-camera-production.glb` is 81,288 triangles, `public/models/ufirst-camera-mobile.glb` is 32,364 triangles, and `public/models/ufirst-camera-distant.glb` is 23,288 triangles. All three expose the required named components and pivots, load through `GLTFLoader` in the local browser, and contain no external texture dependency. Photoreal surface validation and agency visual approval remain open.
+The current generated assets pass the structural portion of this gate: `public/models/ufirst-camera-production.glb` is 81,288 triangles, `public/models/ufirst-camera-mobile.glb` is 32,364 triangles, and `public/models/ufirst-camera-distant.glb` is 23,288 triangles. All three expose the required named components and pivots, load through `GLTFLoader` in the local browser, and use the shared compressed body PBR maps at runtime. Final optical/internal surface validation, profile-guided LOD tuning, and agency visual approval remain open.
 
 ## 12. Temporary asset policy
 

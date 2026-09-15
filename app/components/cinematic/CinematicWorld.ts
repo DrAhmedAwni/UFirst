@@ -384,6 +384,10 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
   model.name = 'UFirst camera runtime container';
   root.add(model);
   const textureLoader = new TextureLoader(manager);
+  const cameraBodyAlbedo = textureLoader.load(assets.cameraBodyAlbedo);
+  cameraBodyAlbedo.colorSpace = SRGBColorSpace;
+  const cameraBodyNormal = textureLoader.load(assets.cameraBodyNormal);
+  const cameraBodyRoughness = textureLoader.load(assets.cameraBodyRoughness);
   const surfaceUrls = quality === 'low' ? [...assets.services.slice(0, 3), assets.projects[0], assets.contact] : [...assets.services, ...assets.projects, assets.contact];
   const surfaceTextures = surfaceUrls.map((url) => {
     const texture = textureLoader.load(url);
@@ -513,6 +517,16 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
       meshMaterials.forEach((material) => {
         material.transparent = true;
         material.depthWrite = true;
+        const isCameraBodySurface = /camera(body|top|bottom|left|right)|body|chassis|plate|rail|grip|handle|shell|rear|batterydoor/i.test(object.name)
+          && !/lens|optical|sensor|processor|memory|display|viewfinder|shutter|aperture|accent|seal|screw|fastener/i.test(object.name);
+        if (isCameraBodySurface) {
+          const physicallyBased = material as MeshPhysicalMaterial;
+          physicallyBased.map = cameraBodyAlbedo;
+          physicallyBased.normalMap = cameraBodyNormal;
+          physicallyBased.normalScale.set(0.28, 0.28);
+          physicallyBased.roughnessMap = cameraBodyRoughness;
+          physicallyBased.needsUpdate = true;
+        }
         materials.push(material);
       });
     });
@@ -605,7 +619,7 @@ export function createCinematicWorld(manager: LoadingManager, assets: CinematicA
     },
     dispose,
     roots: [root],
-    textures: surfaceTextures,
+    textures: [...surfaceTextures, cameraBodyAlbedo, cameraBodyNormal, cameraBodyRoughness],
     getPrimaryObjects: () => model.children as Object3D[],
   };
 }
