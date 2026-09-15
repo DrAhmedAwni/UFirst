@@ -18,7 +18,7 @@ function timelineValue(progress: number, key: 'fov' | 'roll') {
   return last[key];
 }
 
-function pathValue(progress: number, key: 'position' | 'target', output: Vector3, next: Vector3) {
+function pathValue(progress: number, key: 'position' | 'target', output: Vector3) {
   const value = MathUtils.clamp(progress, 0, 1);
   const first = CINEMATIC_KEYFRAMES[0];
   const last = CINEMATIC_KEYFRAMES[CINEMATIC_KEYFRAMES.length - 1];
@@ -35,9 +35,24 @@ function pathValue(progress: number, key: 'position' | 'target', output: Vector3
     const previous = CINEMATIC_KEYFRAMES[index - 1];
     if (value <= current.progress) {
       const t = MathUtils.smoothstep((value - previous.progress) / (current.progress - previous.progress), 0, 1);
-      output.set(...previous[key]);
-      next.set(...current[key]);
-      return output.lerp(next, t);
+      const before = CINEMATIC_KEYFRAMES[Math.max(0, index - 2)][key];
+      const after = CINEMATIC_KEYFRAMES[Math.min(CINEMATIC_KEYFRAMES.length - 1, index + 1)][key];
+      const p0 = before;
+      const p1 = previous[key];
+      const p2 = current[key];
+      const p3 = after;
+      const t2 = t * t;
+      const t3 = t2 * t;
+
+      // A Catmull–Rom segment keeps the lens approach,
+      // threshold passage, and exit in one fluid camera journey without
+      // introducing a separate animation state or scroll lock.
+      output.set(
+        0.5 * ((2 * p1[0]) + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+        0.5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
+        0.5 * ((2 * p1[2]) + (-p0[2] + p2[2]) * t + (2 * p0[2] - 5 * p1[2] + 4 * p2[2] - p3[2]) * t2 + (-p0[2] + 3 * p1[2] - 3 * p2[2] + p3[2]) * t3),
+      );
+      return output;
     }
   }
   output.set(...last[key]);
@@ -47,15 +62,13 @@ function pathValue(progress: number, key: 'position' | 'target', output: Vector3
 export class CameraRig {
   private readonly position = new Vector3();
   private readonly pathTarget = new Vector3();
-  private readonly nextPosition = new Vector3();
-  private readonly nextTarget = new Vector3();
   private readonly currentTarget = new Vector3();
   private initialized = false;
 
   sample(progress: number, aspect: number): CinematicSample {
     const value = MathUtils.clamp(progress, 0, 1);
-    pathValue(value, 'position', this.position, this.nextPosition);
-    pathValue(value, 'target', this.pathTarget, this.nextTarget);
+    pathValue(value, 'position', this.position);
+    pathValue(value, 'target', this.pathTarget);
     const portrait = aspect < 0.78;
     if (portrait) {
       this.position.x *= 0.56;
